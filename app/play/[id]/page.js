@@ -28,6 +28,6 @@ export default async function Play({ params }) {
   const rank = board?.rows.findIndex((r) => r.id === id);
   const thumb = (await hasThumb(g)) ? thumbOf(g) : null;
   const game = { id: g.id, title: g.title, prompt: g.prompt, by: g.by ?? null, wallet: g.wallet ?? null, ms: g.ms ?? null, at: g.at ?? null, repo: g.repo ?? (g.by === "team" ? `https://github.com/${SOURCE_REPO}/blob/main/starter/${g.id}.html` : null), thumb, likes, plays: Number(plays ?? 0), rank: rank >= 0 ? rank + 1 : null };
-  const links = { source: `https://github.com/${SOURCE_REPO}`, games: `https://github.com/${GAMES_REPO}`, x: process.env.X_URL ?? "https://x.com/typecade" };
+  const links = { source: `https://github.com/${SOURCE_REPO}`, games: `https://github.com/${GAMES_REPO}`, x: process.env.X_URL ?? "https://x.com/typecadeapp" };
   return <GamePage game={game} more={more.filter((m) => m.id !== id).slice(0, 18)} mint={mint} links={links} />;
 }

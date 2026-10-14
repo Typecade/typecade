@@ -10,7 +10,7 @@ const TOC = [["what", "What Typecade is"], ["make", "Make a game"], ["play", "Pl
 
 export default async function Docs() {
   const mint = await gameMint().catch(() => null);
-  const links = { source: `https://github.com/${SOURCE_REPO}`, games: `https://github.com/${GAMES_REPO}`, x: process.env.X_URL ?? "https://x.com/typecade" };
+  const links = { source: `https://github.com/${SOURCE_REPO}`, games: `https://github.com/${GAMES_REPO}`, x: process.env.X_URL ?? "https://x.com/typecadeapp" };
   return (
     <>
       <WalletPicker />

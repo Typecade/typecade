@@ -1,0 +1,161 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- The launch film for X: the site's intro as a deterministic comp. render(t) draws the frame at t seconds, so
+     zeroslip/tools/film.mjs can sample it for motion blur. ?t=<s> renders one still (for checks), ?size=1080. -->
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Onest:wght@500;600&family=JetBrains+Mono:wght@400&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #0b0b0c; overflow: hidden; }
+  .c { position: relative; width: 1080px; height: 1080px; overflow: hidden; background: #0b0b0c; color: #f3f3f1; transform-origin: 0 0; }
+  .step { position: absolute; left: 0; right: 0; top: 70px; text-align: center; font: 400 22px/1 "JetBrains Mono", monospace; color: #7d7d84; letter-spacing: 0.12em; }
+  .h { position: absolute; left: 60px; right: 60px; top: 130px; text-align: center; font: 700 84px/0.95 "Pixelify Sans"; }
+  .art { position: absolute; left: 0; right: 0; top: 380px; height: 560px; }
+  .prompt { position: absolute; left: 130px; right: 130px; top: 150px; padding: 30px 34px; border-radius: 22px; border: 1.5px solid rgba(243,243,241,.3); background: #121214; font: 500 38px/1.35 "Onest", sans-serif; text-align: left; }
+  .cursor { display: inline-block; width: 18px; height: 40px; margin-left: 4px; background: #f3f3f1; vertical-align: -6px; }
+  .code { position: absolute; left: 130px; right: 130px; top: 10px; height: 520px; padding: 28px 32px; border-radius: 22px; border: 1.5px solid rgba(243,243,241,.13); background: #050506; color: #d8d8dc; font: 400 23px/1.6 "JetBrains Mono", monospace; white-space: pre; overflow: hidden; text-align: left; }
+  .game { position: absolute; left: 290px; top: 20px; width: 500px; height: 500px; border-radius: 28px; overflow: hidden; border: 1.5px solid rgba(243,243,241,.3); }
+  .game img { width: 100%; height: 100%; object-fit: cover; }
+  .play { position: absolute; left: 50%; top: 50%; display: inline-flex; align-items: center; gap: 14px; height: 92px; padding: 0 40px; border-radius: 18px; background: #f3f3f1; color: #0b0b0c; font: 700 38px/1 "Pixelify Sans"; white-space: nowrap; }
+  .play i { width: 0; height: 0; border-left: 26px solid #0b0b0c; border-top: 16px solid transparent; border-bottom: 16px solid transparent; }
+  .heart { position: absolute; width: 46px; height: 42px; }
+  .count { position: absolute; right: 18px; top: 18px; padding: 12px 18px; border-radius: 14px; background: rgba(11,11,12,.85); font: 700 34px/1 "Pixelify Sans"; display: flex; gap: 10px; align-items: center; }
+  .bars { position: absolute; left: 180px; right: 180px; top: 60px; display: grid; gap: 22px; }
+  .bar { position: relative; height: 92px; border-radius: 18px; border: 1.5px solid rgba(243,243,241,.3); overflow: hidden; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font: 700 34px/1 "Pixelify Sans"; }
+  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: #f3f3f1; }
+  .bar span, .bar b { position: relative; mix-blend-mode: difference; color: #fff; }
+  .bar b { font: 700 30px/1 "JetBrains Mono", monospace; }
+  .note { position: absolute; left: 0; right: 0; top: 440px; text-align: center; font: 400 22px/1 "JetBrains Mono", monospace; color: #7d7d84; }
+  .coin { position: absolute; left: 50%; top: 0; width: 360px; height: 360px; margin-left: -180px; border-radius: 40px; }
+  .coinp { position: absolute; left: 160px; right: 160px; top: 400px; text-align: center; font: 500 32px/1.35 "Onest", sans-serif; color: #b4b4b9; }
+  .end { position: absolute; inset: 0; display: grid; place-items: center; }
+  .endbox { display: grid; justify-items: center; gap: 30px; }
+  .endbox img { width: 260px; height: 260px; border-radius: 36px; }
+  .endbox b { font: 700 120px/0.9 "Pixelify Sans"; text-align: center; }
+  .endbox span { font: 600 44px/1 "Onest", sans-serif; color: #c9bcff; }
+  .bar2 { position: absolute; left: 330px; right: 330px; bottom: 70px; height: 5px; border-radius: 5px; background: rgba(243,243,241,.13); overflow: hidden; }
+  .bar2 i { display: block; height: 100%; background: #f3f3f1; }
+</style></head>
+<body>
+<div class="c" id="c">
+  <p class="step" id="step"></p>
+  <div class="h" id="h"></div>
+  <div class="art" id="art"></div>
+  <div class="bar2"><i id="prog"></i></div>
+</div>
+<script>
+const SCENES = [
+  { t: 0.0, h: "TYPE ONE SENTENCE." },
+  { t: 2.6, h: "AN AI WRITES THE WHOLE GAME." },
+  { t: 5.2, h: "PLAY IT A MINUTE LATER." },
+  { t: 7.6, h: "PEOPLE PLAY IT AND LIKE IT." },
+  { t: 10.0, h: "MAKERS GET PAID. EVERY DAY." },
+  { t: 12.6, h: "$TYPECADE PAYS FOR IT." },
+  { t: 15.0, h: "" },
+];
+const DURATION = 18;
+window.DURATION = DURATION;
+const IDEA = "a cat in a raincoat catching fish in the rain";
+const CODE = `const cat = { x: W / 2, face: 1, happy: 0 };
+function spawn() {
+  const kind = Math.random() < 0.15 ? "boot" : "fish";
+  items.push({ kind, x: rand(W), y: -40, vy: 260 });
+}
+function update(dt) {
+  cat.x += (target - cat.x) * dt * 10;
+  for (const f of items) f.y += f.vy * dt;
+  if (hit(f, cat)) { score += 10; beep(784); }
+}
+function drawCat(x, y) {
+  ctx.fillStyle = "#f29e4c"; ellipse(x, y, 30, 22);
+  ctx.fillStyle = "#ffd166"; hood(x, y - 40);
+}
+function drawFish(f) {
+  ctx.fillStyle = f.gold ? "#ffd166" : "#7fd3ff";
+  fishShape(f.x, f.y, f.rot);
+}`;
+const HEART = `<svg class="heart" viewBox="0 0 24 22"><path fill="#fff" d="M12 21s-8-5.2-10.3-10A5.6 5.6 0 0 1 12 4.6 5.6 5.6 0 0 1 22.3 11C20 15.8 12 21 12 21z"/></svg>`;
+const $ = (id) => document.getElementById(id);
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const out = (x) => 1 - Math.pow(1 - clamp(x), 4);          // exponential-ish ease-out
+const io = (x) => { x = clamp(x); return x < 0.5 ? 8 * x ** 4 : 1 - Math.pow(-2 * x + 2, 4) / 2; };
+let built = -1;
+function sceneAt(t) { let i = 0; SCENES.forEach((s, k) => { if (t >= s.t) i = k; }); return i; }
+function build(i) {
+  built = i;
+  $("step").textContent = i < 6 ? `${String(i + 1).padStart(2, "0")} / 06` : "";
+  $("h").textContent = SCENES[i].h;
+  const a = $("art");
+  if (i === 0) a.innerHTML = `<div class="prompt"><span id="typed"></span><i class="cursor" id="cur"></i></div>`;
+  if (i === 1) a.innerHTML = `<pre class="code" id="code"></pre>`;
+  if (i === 2) a.innerHTML = `<div class="game" id="game"><img src="/public/covers/rainycat.jpg" alt=""><span class="play" id="play"><i></i>PLAY</span></div>`;
+  if (i === 3) a.innerHTML = `<div class="game" id="game"><img src="/public/covers/rainycat.jpg" alt="">${Array.from({ length: 9 }, (_, k) => HEART.replace('class="heart"', `class="heart" id="h${k}"`)).join("")}<span class="count">${HEART.replace('class="heart"', 'class="heart" style="position:static;width:30px;height:28px"')}<span id="likes">0</span></span></div>`;
+  if (i === 4) a.innerHTML = `<div class="bars">${[["Rainy Day Cat", 50], ["Candle Snake", 33], ["Bug Blaster", 17]].map(([n, p], k) => `<div class="bar"><i class="fill" id="f${k}" data-p="${p}"></i><span>${n}</span><b>${p}%</b></div>`).join("")}</div><p class="note">example: the day's pool, shared by likes</p>`;
+  if (i === 5) a.innerHTML = `<img class="coin" id="coin" src="/public/icon-512.png" alt=""><p class="coinp" id="coinp">Its creator fees pay the AI that writes the games and fill the makers' prize pool.</p>`;
+  if (i === 6) { $("h").textContent = ""; a.innerHTML = ""; a.style.top = "0"; a.style.height = "1080px"; a.innerHTML = `<div class="end" id="end"><div class="endbox"><img src="/public/icon-512.png" alt=""><b>TYPE A<br>GAME.</b><span>typecade.app</span></div></div>`; }
+  else { a.style.top = "380px"; a.style.height = "560px"; }
+}
+function render(t) {
+  const i = sceneAt(t), s = SCENES[i], lt = t - s.t, next = SCENES[i + 1] ? SCENES[i + 1].t : DURATION, left = next - t;
+  if (i !== built) build(i);
+  $("prog").style.width = `${(t / DURATION) * 100}%`;
+  // the headline and the art rise in with a little blur, and leave the same way
+  // the very first frame is X's preview image, so the opening scene starts fully visible instead of fading in
+  const first = i === 0;
+  const inK = first ? 1 : out(lt / 0.55), outK = i < 6 ? out((0.35 - left) / 0.35) : 0;
+  for (const el of [$("h"), $("art")]) {
+    const d = el === $("art") ? 0.1 : 0;
+    const k = first ? 1 : out((lt - d) / 0.6);
+    el.style.opacity = String(k * (1 - outK));
+    el.style.transform = `translateY(${(1 - k) * 26 - outK * 18}px) scale(${0.985 + 0.015 * k})`;
+    el.style.filter = `blur(${(1 - k) * 8 + outK * 6}px)`;
+  }
+  $("step").style.opacity = String(inK * (1 - outK));
+  if (i === 0) {
+    const n = Math.round((0.35 + 0.65 * clamp((lt - 0.2) / 1.7)) * IDEA.length);
+    $("typed").textContent = IDEA.slice(0, n);
+    $("cur").style.opacity = n < IDEA.length || Math.floor(lt * 2.2) % 2 === 0 ? "1" : "0";
+  }
+  if (i === 1) {
+    const lines = CODE.split("\n"), shown = Math.floor(clamp((lt - 0.25) / 1.9) * lines.length);
+    $("code").textContent = lines.slice(0, shown).join("\n") + (shown < lines.length ? "\n█" : "");
+  }
+  if (i === 2) {
+    const g = $("game"), k = out((lt - 0.1) / 0.7);
+    g.style.transform = `scale(${0.9 + 0.1 * k})`;
+    const p = $("play"), press = lt > 1.3 && lt < 1.55 ? Math.sin(((lt - 1.3) / 0.25) * Math.PI) : 0;
+    p.style.transform = `translate(-50%, ${-50 + press * 6}%)`;
+    p.style.boxShadow = `0 ${7 - press * 6}px 0 #8d8d93`;
+  }
+  if (i === 3) {
+    $("likes").textContent = String(Math.round(io((lt - 0.2) / 1.8) * 128));
+    for (let k = 0; k < 9; k++) {
+      const h = $("h" + k), ph = ((lt - 0.15 - k * 0.17) / 1.5);
+      const u = clamp(ph);
+      h.style.left = `${40 + k * 48}px`;
+      h.style.top = `${500 - out(u) * 420}px`;
+      h.style.opacity = String(ph <= 0 ? 0 : u < 0.25 ? u / 0.25 : 1 - (u - 0.25) / 0.75);
+      h.style.transform = `scale(${0.7 + 0.5 * u})`;
+    }
+  }
+  if (i === 4) for (let k = 0; k < 3; k++) { const f = $("f" + k); f.style.width = `${io((lt - 0.2 - k * 0.18) / 1.1) * Number(f.dataset.p)}%`; }
+  if (i === 5) {
+    const k = out((lt - 0.05) / 1.1);
+    $("coin").style.transform = `perspective(900px) rotateY(${(1 - k) * -80}deg) scale(${0.75 + 0.25 * k})`;
+    $("coin").style.opacity = String(clamp(lt / 0.4));
+    $("coinp").style.opacity = String(clamp((lt - 0.5) / 0.5));
+  }
+  if (i === 6) {
+    const e = $("end"), k = out(lt / 0.8);
+    e.style.opacity = String(k);
+    e.style.transform = `scale(${0.96 + 0.04 * k})`;
+    e.style.filter = `blur(${(1 - k) * 6}px)`;
+  }
+}
+window.render = render;
+const q = new URLSearchParams(location.search), size = Number(q.get("size") ?? 1080);
+$("c").style.transform = `scale(${size / 1080})`;
+const imgs = ["/public/covers/rainycat.jpg", "/public/icon-512.png"].map((src) => new Promise((r) => { const im = new Image(); im.onload = im.onerror = r; im.src = src; }));
+// every face is loaded before the first frame (a face is only fetched once something uses it, and font-display: block hides it until then)
+const faces = ['700 84px "Pixelify Sans"', '500 38px "Onest"', '600 44px "Onest"', '400 22px "JetBrains Mono"'].map((f) => document.fonts.load(f));
+Promise.all([...faces, ...imgs]).then(() => document.fonts.ready).then(() => { render(Number(q.get("t") ?? 0)); window.READY = true; });
+</script>
+</body></html>
