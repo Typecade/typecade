@@ -1,0 +1,28 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- The X header, laid out for X: everything sits in a centre column, because the phone app crops ~8% off each side,
+     puts the back, search and menu buttons over the mid-height corners and the profile picture over the bottom left.
+     Night ground with a faint violet light, the mark, and one big product line. ?w=1500 or 3000. -->
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;700&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #0c0b12; overflow: hidden; }
+  .c { position: relative; width: 1500px; height: 500px; transform-origin: 0 0; overflow: hidden;
+       background: radial-gradient(1000px 560px at 618px 128px, #1c1634 0%, #1c1634 18%, #130f22 46%, #0c0b12 86%); }
+  .mark { position: absolute; left: 50%; top: 72px; transform: translateX(-50%); display: flex; align-items: center; gap: 16px; white-space: nowrap; }
+  .mark img { width: 150px; height: 150px; margin: -12px -20px -12px -24px;
+              -webkit-mask-image: radial-gradient(closest-side, #000 72%, transparent 98%); mask-image: radial-gradient(closest-side, #000 72%, transparent 98%); }
+  .mark b { font: 700 70px/1 "Onest", sans-serif; color: #f4f2fb; letter-spacing: -0.02em; }
+  h1 { position: absolute; left: 0; right: 0; top: 248px; margin: 0; text-align: center; font: 300 84px/1.06 "Onest", sans-serif; letter-spacing: -0.025em; color: #f1eff8; }
+  h1 span { color: #a993ff; }
+</style></head>
+<body>
+<div class="c" id="c">
+  <div class="mark"><img src="/brand/controller-night-2400.png" alt=""><b>Typecade</b></div>
+  <h1>Type a game.<br><span>Play it in a minute.</span></h1>
+</div>
+<script>
+  const w = Number(new URLSearchParams(location.search).get("w") ?? 1500);
+  document.getElementById("c").style.transform = `scale(${w / 1500})`;
+  document.fonts.ready.then(() => { window.READY = true; });
+</script>
+</body></html>

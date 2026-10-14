@@ -1,0 +1,24 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- The X header in the coin's lavender: the glass controller (brand/typecade-icon-2400.png, same ground colour, so it sits
+     seamlessly) beside the line the product is about. ?w=1500 or 3000. Shot with tools/shot.mjs at w x w/3. -->
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Onest:wght@600&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #e7e0fb; overflow: hidden; }
+  .c { position: relative; width: 1500px; height: 500px; transform-origin: 0 0; }
+  img { position: absolute; right: 70px; top: -130px; width: 760px; height: 760px; }
+  h1 { position: absolute; left: 96px; top: 52px; margin: 0; font: 700 132px/0.86 "Pixelify Sans"; color: #141218; letter-spacing: 0; }
+  p { position: absolute; left: 100px; top: 284px; margin: 0; font: 600 30px/1.3 "Onest", system-ui, sans-serif; color: #4b3f78; }
+</style></head>
+<body>
+<div class="c" id="c">
+  <img src="/brand/typecade-icon-2400.png" alt="">
+  <h1>TYPE A<br>GAME.</h1>
+  <p>Makers get paid when their games get played.</p>
+</div>
+<script>
+  const w = Number(new URLSearchParams(location.search).get("w") ?? 1500);
+  document.getElementById("c").style.transform = `scale(${w / 1500})`;
+  document.fonts.ready.then(() => { window.READY = true; });
+</script>
+</body></html>
