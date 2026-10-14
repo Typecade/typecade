@@ -1,0 +1,90 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- Image cards for the launch thread on X, 1600x900 (16:9). ?v=1 one sentence, one game  2 how it works  3 where the fees go
+     4 sealed and open source  5 the six starter games (written by the team, and the card says so). Same ground as the site and the glass move icons (#0b0b0c). Shot with tools/shot.mjs. -->
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Onest:wght@400;600;700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #0b0b0c; overflow: hidden; }
+  .c { position: relative; width: 1600px; height: 900px; overflow: hidden; color: #f3f3f1; font-family: "Onest", sans-serif; background: #0b0b0c; }
+  .brand { position: absolute; left: 80px; bottom: 60px; display: flex; align-items: center; gap: 14px; font: 600 28px/1 "Onest"; color: #b9b9be; }
+  .brand img { width: 52px; height: 52px; border-radius: 12px; }
+  .site { position: absolute; right: 80px; bottom: 70px; font: 500 24px/1 "JetBrains Mono"; color: #8f8f96; }
+  h1 { position: absolute; left: 80px; top: 70px; margin: 0; font: 700 84px/0.95 "Pixelify Sans"; letter-spacing: 0; }
+  h1 span { color: #b3a0ff; }
+  /* 1 */
+  .prompt { position: absolute; left: 80px; top: 330px; width: 500px; padding: 30px 34px; border-radius: 22px; border: 2px solid rgba(243,243,241,.3); background: #121214; font: 600 36px/1.3 "Onest"; }
+  .arrow { position: absolute; left: 680px; top: 372px; font: 700 70px/1 "Onest"; color: #b3a0ff; }
+  .log { position: absolute; right: 80px; top: 200px; width: 640px; padding: 22px 44px; border-radius: 26px; border: 2px solid rgba(243,243,241,.3); background: #121214; }
+  .log div { display: grid; grid-template-columns: 200px 1fr; align-items: baseline; padding: 26px 0; border-bottom: 2px solid rgba(243,243,241,.1); }
+  .log div:last-child { border-bottom: 0; }
+  .log b { font: 700 58px/1 "JetBrains Mono"; letter-spacing: -0.02em; }
+  .log span { font: 400 27px/1.3 "Onest"; color: #b9b9be; }
+  .log div:last-child b { color: #b3a0ff; }
+  .log div:last-child span { color: #f3f3f1; }
+  .secs { position: absolute; left: 80px; top: 560px; font: 500 26px/1.4 "JetBrains Mono"; color: #b9b9be; }
+  .secs b { color: #f3f3f1; }
+  /* 2 */
+  .steps { position: absolute; left: 80px; right: 80px; top: 350px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 34px; }
+  .steps div { display: grid; gap: 14px; }
+  .steps img { width: 200px; height: 200px; margin-left: -14px; }
+  .steps b { font: 700 34px/1 "Onest"; }
+  .steps p { margin: 0; font: 400 24px/1.4 "Onest"; color: #b9b9be; }
+  /* 3 */
+  .bar { position: absolute; left: 80px; right: 80px; top: 380px; height: 130px; display: flex; gap: 8px; padding: 8px; border: 2px solid rgba(243,243,241,.3); border-radius: 22px; }
+  .seg { border-radius: 14px; display: flex; align-items: flex-end; padding: 18px 22px; font: 700 44px/1 "JetBrains Mono"; }
+  .key { position: absolute; left: 80px; right: 80px; top: 570px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; }
+  .key b { display: block; font: 700 32px/1.1 "Onest"; margin-bottom: 10px; }
+  .key p { margin: 0; font: 400 24px/1.4 "Onest"; color: #b9b9be; }
+  /* 4 */
+  .wall { position: absolute; right: 80px; top: 170px; width: 760px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .wall img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 18px; border: 2px solid rgba(243,243,241,.18); }
+  .points { position: absolute; left: 80px; top: 300px; width: 640px; display: grid; gap: 30px; }
+  .points b { display: block; font: 700 34px/1.1 "Onest"; margin-bottom: 8px; }
+  .points p { margin: 0; font: 400 25px/1.4 "Onest"; color: #b9b9be; }
+  /* 5 */
+  .v5 h1 { top: 64px; font-size: 64px; }
+  .note { position: absolute; left: 80px; top: 140px; margin: 0; font: 400 23px/1.3 "Onest"; color: #8f8f96; }
+  .v5 .brand { top: 70px; bottom: auto; left: auto; right: 80px; }
+  .v5 .site { display: none; }
+  .six { position: absolute; left: 80px; right: 80px; top: 210px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 34px 32px; }
+  .six img { display: block; width: 100%; height: 190px; object-fit: cover; border-radius: 18px; border: 2px solid rgba(243,243,241,.18); }
+  .six b { display: block; margin: 16px 0 6px; font: 700 27px/1 "Onest"; }
+  .six p { margin: 0; font: 400 21px/1.35 "Onest"; color: #b9b9be; }
+</style></head>
+<body>
+<div class="c" id="c"></div>
+<script>
+  const v = new URLSearchParams(location.search).get("v") ?? "1", c = document.getElementById("c");
+  const foot = `<div class="brand"><img src="/public/icon-256.png" alt="">Typecade</div><div class="site">typecade.app</div>`;
+  c.className = "c v" + v;
+  c.innerHTML = {
+    1: `<h1>ONE SENTENCE.<br><span>ONE GAME.</span></h1>
+        <div class="prompt">“a frog crossing a highway made of crypto charts”</div><div class="arrow">→</div>
+        <div class="log"><div><b>0.0s</b><span>The sentence goes in</span></div><div><b>1.2s</b><span>First line of code on screen</span></div><div><b>38s</b><span>Playable game with its own page</span></div></div>
+        <p class="secs">Our test build, timed.<br>The AI writes the <b>whole game</b> while you watch.</p>${foot}`,
+    2: `<h1>HOW IT <span>WORKS</span></h1>
+        <div class="steps">
+          <div><img src="/public/moves/coin.png" alt=""><b>Hold</b><p>$TYPECADE worth 1 SOL lets you make games.</p></div>
+          <div><img src="/public/moves/key.png" alt=""><b>Type</b><p>One sentence, any idea, any language.</p></div>
+          <div><img src="/public/moves/heart.png" alt=""><b>Collect likes</b><p>Share your game's page. Holders like it.</p></div>
+          <div><img src="/public/moves/trophy.png" alt=""><b>Get paid</b><p>Every day the top 10 makers share the pool.</p></div>
+        </div>${foot}`,
+    3: `<h1>WHERE THE <span>FEES</span> GO</h1>
+        <div class="bar"><div class="seg" style="flex:50;background:#f3f3f1;color:#0b0b0c">50%</div><div class="seg" style="flex:35;background:#6e6e75">35%</div><div class="seg" style="flex:15;background:#121214;box-shadow:inset 0 0 0 2px #b3a0ff;color:#b3a0ff">15%</div></div>
+        <div class="key"><div><b>Developer</b><p>Runs the servers and builds Typecade.</p></div><div><b>AI tank</b><p>Pays for the AI only when a game gets made.</p></div><div><b style="color:#b3a0ff">Makers' pool</b><p>Shared every day among the 10 most-liked games.</p></div></div>${foot}`,
+    4: `<h1>SEALED.<br><span>OPEN SOURCE.</span></h1>
+        <div class="points"><div><b>Every game runs sealed</b><p>No network access, so a game can't phone home or turn into a drainer.</p></div><div><b>Every game is public</b><p>Its code and the sentence it came from land on GitHub the moment it's made.</p></div></div>
+        <div class="wall">${["candlsnk","tothemun","candlebk","rainycat","bugblast","roofninj"].map((g) => `<img src="/public/thumbs/${g}.jpg" alt="">`).join("")}</div>${foot}`,
+    5: `<h1>SIX GAMES <span>ON DAY ONE.</span></h1><p class="note">Written by the team so the board isn’t empty. Every game after these is written by the AI.</p>
+        <div class="six">${[
+          ["candlsnk", "Candle Snake", "Snake, but you're a chart eating green candles and dodging the red ones"],
+          ["tothemun", "To The Moon", "A one-button rocket that flies a memecoin to the moon past bear paws"],
+          ["candlebk", "Candle Breaker", "Breakout where the bricks are red candles and you turn the chart green"],
+          ["rainycat", "Rainy Day Cat", "A cat in a yellow raincoat catching falling fish in the rain"],
+          ["bugblast", "Bug Blaster", "A space shooter where you blast giant pixel bugs out of the code"],
+          ["roofninj", "Rooftop Ninja", "A ninja running across city rooftops at sunset, double jump to flip"],
+        ].map(([g, t, p]) => `<div><img src="/public/covers/${g}.jpg" alt=""><b>${t}</b><p>${p}</p></div>`).join("")}</div>${foot}`,
+  }[v];
+  Promise.all([document.fonts.ready, ...[...c.querySelectorAll("img")].map((i) => i.complete ? 1 : new Promise((r) => (i.onload = i.onerror = r)))]).then(() => { window.READY = true; });
+</script>
+</body></html>
