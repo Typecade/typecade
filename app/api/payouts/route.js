@@ -1,13 +1,13 @@
 // POST /api/payouts {day, signature, winners:[{id, title, wallet, likes, sol}]}: the server's payout worker records a day's
 // prize, paid in one transaction to every winning maker (bearer BOT_KEY).
 import { BOT_KEY } from "../../../lib/config.js";
+import { botAuth } from "../../../lib/guard.js";
 import { recordPayout } from "../../../lib/likes.js";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
-  const auth = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
-  if (!BOT_KEY || auth !== BOT_KEY) return Response.json({ error: "no" }, { status: 401 });
+  if (!(await botAuth(req, BOT_KEY))) return Response.json({ error: "no" }, { status: 401 });
   const p = await req.json().catch(() => null);
   const B58 = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
   const ok = p && /^\d{4}-\d{2}-\d{2}$/.test(p.day) && /^[1-9A-HJ-NP-Za-km-z]{64,90}$/.test(p.signature ?? "") && Array.isArray(p.winners) && p.winners.length > 0 && p.winners.length <= 10
