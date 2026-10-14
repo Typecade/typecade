@@ -64,6 +64,7 @@ export function Nav({ mint, links }) {
       </nav>
       <div className="nav-right">
         <a className="icon-btn" href={links.x} target="_blank" rel="noopener" aria-label="Typecade on X"><XMark size={18} /></a>
+        <a className="icon-btn" href={links.source.replace(/\/[^/]+$/, "")} target="_blank" rel="noopener" aria-label="Typecade on GitHub"><GitHub size={19} /></a>
         <WalletButton />
         {mint ? <a className="btn-solid" href={`https://pump.fun/coin/${mint}`} target="_blank" rel="noopener">BUY $TYPECADE</a> : <span className="btn-solid off" aria-disabled="true">$TYPECADE SOON</span>}
       </div>
