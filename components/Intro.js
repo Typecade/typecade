@@ -133,7 +133,7 @@ export default function Intro() {
             )}
             {scene === 4 && (
               <div className="f-pool">
-                {[["Rainy Day Cat", 50], ["Rug Snake", 33], ["Bug Blaster", 17]].map(([n, p], i) => (
+                {[["Rainy Day Cat", 50], ["Candle Snake", 33], ["Bug Blaster", 17]].map(([n, p], i) => (
                   <div key={n} className="f-bar" style={{ "--p": `${p}%`, "--d": `${i * 160}ms` }}><span>{n}</span><b>{p}%</b></div>
                 ))}
                 <p className="f-note mono">example: the day's pool shared by likes</p>

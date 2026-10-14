@@ -10,7 +10,7 @@ import Key3D from "./Key3D.js";
 import { Typed, useTypingPlaceholder } from "./fx.js";
 
 const EXAMPLES = [
-  "Snake, but you're a pump.fun dev dodging rug pulls",
+  "Snake, but every apple is a green candle",
   "Flappy bird, but it's a burger escaping a hungry chef",
   "A penguin sliding down an endless ice mountain",
   "Space invaders where the aliens are tax forms",

@@ -5,12 +5,12 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 const N = Number(process.argv[2] ?? 3), BASE = process.argv[3] ?? "http://localhost:5380";
 const PROMPTS = [
-  "Snake, but you're a pump.fun dev eating green candles and dodging rug pulls",
+  "Snake, but you're a chart eating green candles and dodging the red ones",
   "A frog hopping across a busy highway made of crypto charts",
   "Flappy bird but it's a burger escaping a hungry chef",
   "Space invaders where the aliens are tax forms",
   "A penguin sliding down an endless ice mountain collecting fish",
-  "Whack-a-mole with rugpullers popping out of holes",
+  "Whack-a-mole with bears popping out of holes",
   "A tiny wizard defending a castle from slimes with fireballs",
   "Pong against an AI that gets cockier every point",
   "A racing game where you dodge traffic as a shopping cart",

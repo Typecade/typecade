@@ -164,7 +164,7 @@
     }
     if (state === "over") {
       cx.fillStyle = "rgba(9,10,31,0.6)"; cx.fillRect(0, 0, W, H);
-      txt("REKT", W / 2, H * 0.32, s * 0.14, "#e84855");
+      txt("CRASHED", W / 2, H * 0.32, s * 0.14, "#e84855");
       txt("Peak market cap " + mcap(dist), W / 2, H * 0.32 + s * 0.12, Math.max(16, s * 0.045), "#f4f1ff");
       txt("ATH this session " + mcap(best), W / 2, H * 0.32 + s * 0.18, Math.max(14, s * 0.035), "#ffd166", "center", 700);
       txt("Press Space or tap to launch again", W / 2, H * 0.74, Math.max(16, s * 0.042), `rgba(255,255,255,${0.6 + Math.sin(t * 4) * 0.4})`);

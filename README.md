@@ -8,7 +8,7 @@ its own page, makers get paid when their games get played and liked, and every g
 
 ## How it works
 
-1. You type an idea: *"Snake, but you're a pump.fun dev dodging rug pulls."*
+1. You type an idea: *"Snake, but every apple is a green candle."*
 2. The engine sends it to the model with one set of rules (`lib/prompt.js`): a single HTML file, touch controls for phones,
    a title screen, a score, a game-over screen, no network and no storage.
 3. The code streams back while the model writes it (`app/api/build/route.js`). When it is complete, the game is saved and
