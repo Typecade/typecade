@@ -7,14 +7,15 @@
   .c { position: relative; width: 1000px; height: 1000px; transform-origin: 0 0; overflow: hidden;
        background: radial-gradient(closest-side, #1c1634 0%, #1c1634 34%, #15112a 62%, #0d0b15 100%); }
   img { position: absolute; inset: 0; width: 1000px; height: 1000px;
-        -webkit-mask-image: radial-gradient(closest-side, #000 70%, transparent 96%); mask-image: radial-gradient(closest-side, #000 70%, transparent 96%); }
+        -webkit-mask-image: radial-gradient(closest-side, #000 86%, transparent 100%); mask-image: radial-gradient(closest-side, #000 86%, transparent 100%); }
 </style></head>
 <body>
-<div class="c" id="c"><img src="/brand/controller-night-2400.png" alt=""></div>
+<div class="c" id="c"><img id="im" alt=""></div>
 <script>
   const s = Number(new URLSearchParams(location.search).get("s") ?? 1000);
   document.getElementById("c").style.transform = `scale(${s / 1000})`;
-  const im = document.querySelector("img");
+  const im = document.getElementById("im");
+  im.src = new URLSearchParams(location.search).get("src") ?? "/brand/opts/ctrl-night-small.png";
   (im.complete ? Promise.resolve() : new Promise((r) => (im.onload = r))).then(() => { window.READY = true; });
 </script>
 </body></html>

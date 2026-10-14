@@ -1,0 +1,61 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- Four X header options, all kept inside X's safe centre column (the phone app crops ~8% off each side, puts its buttons
+     over the mid-height corners and the profile picture over the bottom left). ?v=1..4&w=1500|3000.
+     1 night, centred mark and line   2 night, pixel headline and a big controller   3 a wall of real games   4 lavender -->
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Onest:wght@300;600;700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; overflow: hidden; background: #000; }
+  .c { position: relative; width: 1500px; height: 500px; transform-origin: 0 0; overflow: hidden; }
+  .night { background: #1c1634; }
+  .lav { background: #e7e0fb; }
+  .abs { position: absolute; }
+  .center { left: 0; right: 0; text-align: center; }
+  /* 1 */
+  .m1 { left: 50%; top: 58px; transform: translateX(-50%); display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+  .m1 img { width: 160px; height: 160px; margin: -20px -24px -20px -30px; }
+  .m1 b { font: 700 66px/1 "Onest", sans-serif; color: #f4f2fb; letter-spacing: -0.02em; }
+  .h1 { top: 222px; margin: 0; font: 300 82px/1.06 "Onest", sans-serif; letter-spacing: -0.025em; color: #f1eff8; }
+  .h1 span { color: #b3a0ff; }
+  .row { top: 410px; font: 500 19px/1 "JetBrains Mono", monospace; letter-spacing: 0.3em; color: #8f86b8; }
+  /* 2 */
+  .p2 { left: 360px; top: 112px; margin: 0; font: 700 112px/0.88 "Pixelify Sans"; color: #f4f2fb; }
+  .s2 { left: 366px; top: 330px; margin: 0; font: 600 32px/1.2 "Onest", sans-serif; color: #b3a0ff; }
+  .i2 { left: 640px; top: -10px; width: 520px; height: 520px; }
+  /* 3 */
+  .wall { position: absolute; inset: -80px -120px; display: grid; grid-template-columns: repeat(6, 300px); grid-auto-rows: 188px; gap: 18px; transform: rotate(-8deg); opacity: 0.55; }
+  .wall img { width: 300px; height: 188px; object-fit: cover; border-radius: 16px; }
+  .shade { position: absolute; inset: 0; background: radial-gradient(640px 300px at 750px 250px, rgba(12,10,20,0.92) 0%, rgba(12,10,20,0.78) 55%, rgba(12,10,20,0.35) 100%); }
+  .m3 { left: 50%; top: 92px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+  .m3 img { width: 120px; height: 120px; margin: -16px -18px -16px -22px; border-radius: 26px; }
+  .m3 b { font: 700 56px/1 "Onest", sans-serif; color: #fff; letter-spacing: -0.02em; }
+  .h3 { top: 214px; margin: 0; font: 700 92px/0.95 "Pixelify Sans"; color: #fff; }
+  .s3 { top: 330px; margin: 0; font: 600 30px/1.2 "Onest", sans-serif; color: #c9bcff; }
+  /* 4 */
+  .m4 { left: 50%; top: 40px; transform: translateX(-50%); width: 300px; height: 300px; }
+  .w4 { top: 262px; margin: 0; font: 700 70px/1 "Onest", sans-serif; color: #241a4d; letter-spacing: -0.02em; }
+  .s4 { top: 352px; margin: 0; font: 600 30px/1.2 "Onest", sans-serif; color: #5b4a99; }
+</style></head>
+<body>
+<div class="c" id="c"></div>
+<script>
+  const q = new URLSearchParams(location.search), v = q.get("v") ?? "1", w = Number(q.get("w") ?? 1500), c = document.getElementById("c");
+  const games = ["candlsnk", "tothemun", "candlebk", "rainycat", "bugblast", "roofninj"];
+  const html = {
+    1: `<div class="abs m1"><img src="/brand/opts/ctrl-night-small.png" alt=""><b>Typecade</b></div>
+        <h1 class="abs center h1">Type a game.<br><span>Play it in a minute.</span></h1>
+        <p class="abs center row" style="margin:0">TYPE · PLAY · LIKE · GET PAID</p>`,
+    2: `<img class="abs i2" src="/brand/opts/ctrl-night-small.png" alt="">
+        <h1 class="abs p2">TYPE A<br>GAME.</h1><p class="abs s2">Play it in a minute.</p>`,
+    3: `<div class="wall">${Array.from({ length: 24 }, (_, i) => `<img src="/public/covers/${games[i % 6]}.jpg" alt="">`).join("")}</div><div class="shade"></div>
+        <div class="abs m3"><img src="/brand/opts/icon-3-night-top.png" alt=""><b>Typecade</b></div>
+        <h1 class="abs center h3">TYPE A GAME.</h1><p class="abs center s3">Play it in a minute. Makers get paid.</p>`,
+    4: `<img class="abs m4" src="/brand/opts/icon-2-lavender.png" alt="">
+        <p class="abs center w4">Typecade</p><p class="abs center s4">Type a game. Play it in a minute.</p>`,
+  }[v];
+  c.className = "c " + (v === "4" ? "lav" : "night");
+  c.innerHTML = html;
+  c.style.transform = `scale(${w / 1500})`;
+  Promise.all([document.fonts.ready, ...[...c.querySelectorAll("img")].map((i) => i.complete ? 1 : new Promise((r) => (i.onload = i.onerror = r)))]).then(() => { window.READY = true; });
+</script>
+</body></html>
