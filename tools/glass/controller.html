@@ -1,0 +1,76 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- The Typecade mark: a frosted-glass game controller with black buttons, rendered on black. tools/glass/render.sh shoots
+     it to brand/ (?s=<px> for the size, &bg=<hex> for the ground, &a=<angle> to turn it). -->
+<script type="importmap">{ "imports": { "three": "/node_modules/three/build/three.module.js", "three/addons/": "/node_modules/three/examples/jsm/" } }</script>
+<style>html,body{margin:0;background:transparent;overflow:hidden}canvas{display:block}</style>
+</head><body>
+<script type="module">
+import * as THREE from "three";
+import { studioEnvironment, glassMaterial, whiteGlass } from "/components/studio.js";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+const q = new URLSearchParams(location.search), S = Number(q.get("s") ?? 1000), BG = "#" + (q.get("bg") ?? "000000"), A = Number(q.get("a") ?? 0), V = q.get("v") ?? "white", D = Number(q.get("d") ?? 1);
+const CLEAR = q.get("bg") === "none";
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: CLEAR });
+r.setPixelRatio(1); r.setSize(S, S); if (r.transmissionResolutionScale !== undefined) r.transmissionResolutionScale = 1; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05; r.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(r.domElement);
+const scene = new THREE.Scene(); if (!CLEAR) scene.background = new THREE.Color(BG);
+scene.environment = studioEnvironment(THREE, r);
+const cam = new THREE.PerspectiveCamera(28, 1, 0.1, 100); cam.position.set(0, 7.4 * D, 10.6 * D); cam.lookAt(0, -0.25, 0);
+if (q.get("pose") === "icon") { cam.position.set(0, 2.2 * D, 12.4 * D); cam.lookAt(0, 0, 0); }
+
+// the body: a classic pad outline (two grips), extruded with a deep bevel so it reads as one pebble of glass
+const s = new THREE.Shape();
+s.moveTo(-1.3, 1.05); s.lineTo(1.3, 1.05);
+s.bezierCurveTo(2.2, 1.05, 2.58, 0.62, 2.62, -0.08);
+s.bezierCurveTo(2.68, -0.92, 2.46, -1.6, 1.88, -1.64);
+s.bezierCurveTo(1.42, -1.68, 1.18, -1.22, 0.95, -0.88);
+s.bezierCurveTo(0.68, -0.52, -0.68, -0.52, -0.95, -0.88);
+s.bezierCurveTo(-1.18, -1.22, -1.42, -1.68, -1.88, -1.64);
+s.bezierCurveTo(-2.46, -1.6, -2.68, -0.92, -2.62, -0.08);
+s.bezierCurveTo(-2.58, 0.62, -2.2, 1.05, -1.3, 1.05);
+const bodyG = new THREE.ExtrudeGeometry(s, { depth: 0.42, bevelEnabled: true, bevelThickness: 0.3, bevelSize: 0.3, bevelSegments: 20, curveSegments: 128 });
+bodyG.center();
+// v=clear: water-clear glass; v=ice (default): milky ice glass that glows white on black, like frosted crystal
+// v=clear-icon: water-clear glass that bends the soft light behind it (see the glow below)
+const glass = V === "clearicon" ? new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 1, roughness: 0.05, thickness: 1.1, ior: 1.45, dispersion: 1.2, clearcoat: 1, clearcoatRoughness: 0, specularIntensity: 1, attenuationColor: new THREE.Color(0xffffff), attenuationDistance: 12, envMapIntensity: 2.4 }) : V === "white" ? whiteGlass(THREE) : V === "glass" ? glassMaterial(THREE) : V === "lit" ? glassMaterial(THREE, { emissive: new THREE.Color(0xb8c2d8), emissiveIntensity: 0.32, roughness: 0.3 }) : V === "crystal"
+  ? new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 0.86, thickness: 1.3, roughness: 0.1, ior: 1.5, clearcoat: 1, clearcoatRoughness: 0.03, sheen: 0.35, sheenColor: new THREE.Color(0xffffff), attenuationColor: new THREE.Color(0xf4f6fb), attenuationDistance: 2.2, envMapIntensity: 2.6 })
+  : V === "clear"
+  ? new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 1, thickness: 1.4, roughness: 0.14, ior: 1.5, clearcoat: 1, clearcoatRoughness: 0.04, attenuationColor: new THREE.Color(0xe2e7f0), attenuationDistance: 3, envMapIntensity: 1.7 })
+  : new THREE.MeshPhysicalMaterial({ color: 0xf4f6fa, transmission: 0.62, thickness: 1.6, roughness: 0.22, ior: 1.45, clearcoat: 1, clearcoatRoughness: 0.03, sheen: 0.5, sheenColor: new THREE.Color(0xffffff), sheenRoughness: 0.4, attenuationColor: new THREE.Color(0xf0f3fa), attenuationDistance: 2.4, envMapIntensity: 2.1 });
+// the buttons are drawn after the glass (transparent pass), so the glass does not refract a second, shifted copy of them
+const ink = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.35, metalness: 0, envMapIntensity: 0.18, transparent: true, opacity: 1 });
+const pad = new THREE.Group();
+const body = new THREE.Mesh(bodyG, glass); body.rotation.x = -Math.PI / 2; pad.add(body);
+// core=1: a soft white light inside the glass, so clear glass reads on pure black without any glow around it
+if (q.has("core")) {
+  const coreG = bodyG.clone(); const core = new THREE.Mesh(coreG, new THREE.MeshBasicMaterial({ color: new THREE.Color(Number(q.get("core")) || 0.55, Number(q.get("core")) || 0.55, (Number(q.get("core")) || 0.55) * 1.04), toneMapped: false }));
+  core.rotation.x = -Math.PI / 2; core.scale.set(0.86, 0.86, 0.5); pad.add(core);
+}
+const top = 0.51; // the glass top surface (half depth plus bevel)
+// d-pad on the left
+for (const [w, d] of [[0.92, 0.3], [0.3, 0.92]]) { const m = new THREE.Mesh(new RoundedBoxGeometry(w, 0.16, d, 4, 0.06), ink); m.position.set(-1.55, top + 0.06, -0.18); pad.add(m); }
+// four face buttons on the right
+for (const [x, z] of [[1.55, -0.6], [1.55, 0.24], [1.13, -0.18], [1.97, -0.18]]) { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.19, 0.14, 40), ink); m.position.set(x, top + 0.06, z); pad.add(m); }
+// select and start
+for (const x of [-0.34, 0.34]) { const m = new THREE.Mesh(new RoundedBoxGeometry(0.42, 0.1, 0.14, 3, 0.05), ink); m.position.set(x, top + 0.04, 0.12); m.rotation.y = -0.45; pad.add(m); }
+const P = q.get("pose");
+if (P === "icon") pad.rotation.set(0.98, -0.28 + A, 0.16); else pad.rotation.set(0.08, A, 0.12);
+if (q.has("glow")) {
+  const c = document.createElement("canvas"); c.width = c.height = 512; const g = c.getContext("2d");
+  const gr = g.createRadialGradient(256, 256, 0, 256, 256, 256); gr.addColorStop(0, "rgba(150,154,166,1)"); gr.addColorStop(0.3, "rgba(70,72,82,1)"); gr.addColorStop(0.68, "#" + (q.get("edge") ?? "000000")); gr.addColorStop(1, "#" + (q.get("edge") ?? "000000"));
+  g.fillStyle = gr; g.fillRect(0, 0, 512, 512);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(19, 19), new THREE.MeshBasicMaterial({ map: tex, toneMapped: false }));
+  back.position.set(0, -0.2, -6); back.lookAt(cam.position); scene.add(back);
+}
+scene.add(pad);
+const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(-3, 7, 4); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 1.4); rim.position.set(4, 2, -5); scene.add(rim);
+// a soft floor shadow
+const sh = new THREE.Mesh(new THREE.CircleGeometry(3.2, 64), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: BG === "#000000" || q.has("glow") ? 0 : 0.4 }));
+sh.rotation.x = -Math.PI / 2; sh.position.y = -0.6; sh.scale.set(1, 0.55, 1); scene.add(sh);
+r.render(scene, cam);
+window.READY = true;
+</script>
+</body></html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- Typecade's brand stills: ?m=og (1200x630 share card) or ?m=banner (X header, 1500x500 drawn at 2x). The glass
+     controller is brand/typecade-icon-2000.png (tools/glass/controller.html). Shot by tools/brand.sh. -->
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Onest:wght@500;600&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
+<style>
+  html, body { margin: 0; background: #0b0b0c; color: #f3f3f1; }
+  .f { position: relative; overflow: hidden; background: #0b0b0c; }
+  .dots { position: absolute; background: radial-gradient(circle, rgba(243,243,241,.42) 1.6px, transparent 2px) 0 0 / 13px 13px; mask-image: radial-gradient(closest-side, #000 20%, transparent 75%); -webkit-mask-image: radial-gradient(closest-side, #000 20%, transparent 75%); }
+  .icon { position: absolute; }
+  h1 { position: absolute; margin: 0; font: 700 1px/0.86 "Pixelify Sans"; text-shadow: 0 0 40px rgba(243,243,241,.18); }
+  .sub { position: absolute; margin: 0; font: 600 1px/1.35 "Onest"; color: #d6d6da; }
+  .tag { position: absolute; margin: 0; font: 500 1px/1 "JetBrains Mono"; color: #8a8a90; }
+  .dot { display: inline-block; border-radius: 50%; background: #3ddc84; margin-right: .5em; vertical-align: .1em; }
+</style></head><body>
+<div id="root"></div>
+<script>
+  const m = new URLSearchParams(location.search).get("m") ?? "og", r = document.getElementById("root");
+  if (m === "og") {
+    r.innerHTML = `<div class="f" id="og" style="width:1200px;height:630px">
+      <div class="dots" style="right:-60px;top:-20px;width:720px;height:680px"></div>
+      <img class="icon" src="/brand/typecade-glass-clear.png" style="right:10px;top:60px;width:540px;height:540px">
+      <p class="tag" style="left:64px;top:64px;font-size:20px">// typecade.app</p>
+      <h1 style="left:60px;top:118px;font-size:138px">TYPE A<br>GAME.</h1>
+      <p class="sub" style="left:64px;top:392px;font-size:28px;width:620px">One sentence in, a game out a minute later.</p>
+      <p class="sub" style="left:64px;top:452px;font-size:26px;width:620px;color:#f3f3f1"><span class="dot" style="width:14px;height:14px"></span>Makers get paid when their games get played.</p>
+    </div>`;
+  } else {
+    // X header, drawn at 2x (3000x1000); X lays the profile picture over the lower left, so the words sit right of it
+    r.innerHTML = `<div class="f" id="banner" style="width:3000px;height:1000px">
+      <div class="dots" style="right:80px;top:-60px;width:1300px;height:1120px"></div>
+      <img class="icon" src="/brand/typecade-glass-clear.png" style="right:90px;top:90px;width:820px;height:820px">
+      <p class="tag" style="left:760px;top:170px;font-size:40px">// press enter to play</p>
+      <h1 style="left:750px;top:250px;font-size:220px">TYPECADE</h1>
+      <p class="sub" style="left:760px;top:500px;font-size:58px;width:1300px">Type a game. Play it in a minute.</p>
+      <p class="sub" style="left:760px;top:610px;font-size:48px;width:1300px;color:#f3f3f1"><span class="dot" style="width:26px;height:26px"></span>Makers get paid when their games get played.</p>
+    </div>`;
+  }
+  document.fonts.ready.then(() => setTimeout(() => (window.READY = true), 300));
+</script>
+</body></html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- The four move icons, in the logo's glass: water-clear glass lit from a soft core inside, black ink, on the page's black.
+     ?o=coin|key|heart|trophy picks the object, ?s=<px> the size, ?bg=<hex> the ground. -->
+<script type="importmap">{ "imports": { "three": "/node_modules/three/build/three.module.js", "three/addons/": "/node_modules/three/examples/jsm/" } }</script>
+<style>html,body{margin:0;background:transparent;overflow:hidden}canvas{display:block}</style>
+</head><body>
+<script type="module">
+import * as THREE from "three";
+import { studioEnvironment } from "/components/studio.js";
+import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
+const q = new URLSearchParams(location.search), S = Number(q.get("s") ?? 512), BG = "#" + (q.get("bg") ?? "0b0b0c"), O = q.get("o") ?? "coin", CORE = Number(q.get("core") ?? 0.62);
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+r.setPixelRatio(1); r.setSize(S, S); if (r.transmissionResolutionScale !== undefined) r.transmissionResolutionScale = 1;
+r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.05; r.outputColorSpace = THREE.SRGBColorSpace;
+document.body.appendChild(r.domElement);
+const scene = new THREE.Scene(); scene.background = new THREE.Color(BG);
+scene.environment = studioEnvironment(THREE, r);
+const cam = new THREE.PerspectiveCamera(26, 1, 0.1, 100); cam.position.set(0, 2.2, 12.4); cam.lookAt(0, 0, 0);
+
+// the logo's glass and its inner light
+const glass = new THREE.MeshPhysicalMaterial({ color: 0xffffff, transmission: 1, roughness: 0.05, thickness: 1.1, ior: 1.45, dispersion: 1.2, clearcoat: 1, clearcoatRoughness: 0, specularIntensity: 1, attenuationColor: new THREE.Color(0xffffff), attenuationDistance: 12, envMapIntensity: 2.4 });
+const coreMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(CORE, CORE, CORE * 1.04) });
+// ink is drawn after the glass (transparent pass), so the glass does not refract a second, shifted copy of it
+const ink = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.35, metalness: 0, envMapIntensity: 0.18, transparent: true, opacity: 1 });
+const obj = new THREE.Group();
+const lit = (geo, k = [0.84, 0.84, 0.5], at = [0, 0, 0]) => { const m = new THREE.Mesh(geo, glass); const c = new THREE.Mesh(geo, coreMat); c.scale.set(...k); c.position.set(...at); obj.add(m, c); return m; };
+
+if (O === "coin") {
+  // $TYPECADE: a thick glass coin with the controller's d-pad and two buttons inked on its face
+  const g = new THREE.ExtrudeGeometry(new THREE.Shape().absarc(0, 0, 1.5, 0, Math.PI * 2), { depth: 0.22, bevelEnabled: true, bevelThickness: 0.2, bevelSize: 0.18, bevelSegments: 16, curveSegments: 96 });
+  g.center(); lit(g, [0.84, 0.84, 0.4]);
+  const z = 0.32;
+  for (const [w, h] of [[0.86, 0.28], [0.28, 0.86]]) { const m = new THREE.Mesh(new RoundedBoxGeometry(w, h, 0.12, 4, 0.05), ink); m.position.set(-0.52, 0, z); obj.add(m); }
+  for (const [x, y] of [[0.5, 0.2], [0.86, -0.16]]) { const m = new THREE.Mesh(new THREE.CylinderGeometry(0.17, 0.17, 0.12, 40), ink); m.rotation.x = Math.PI / 2; m.position.set(x, y, z); obj.add(m); }
+  obj.rotation.set(-0.12, -0.5, 0.08);
+} else if (O === "key") {
+  // type a game: the hero's tapered keycap, with a pixel T inked on top
+  const g = new RoundedBoxGeometry(2.3, 1.05, 2.3, 6, 0.26), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const t = (p.getY(i) + 0.525) / 1.05, k = 1 - 0.2 * t; p.setX(i, p.getX(i) * k); p.setZ(i, p.getZ(i) * k); }
+  g.computeVertexNormals(); lit(g, [0.82, 0.7, 0.82], [0, -0.05, 0]);
+  const px = 0.2, T = [[-2, 2], [-1, 2], [0, 2], [1, 2], [2, 2], [0, 1], [0, 0], [0, -1], [0, -2]];
+  for (const [x, y] of T) { const m = new THREE.Mesh(new RoundedBoxGeometry(px * 0.94, 0.06, px * 0.94, 2, 0.02), ink); m.position.set(x * px, 0.54, -y * px); obj.add(m); }
+  obj.rotation.set(0.62, -0.62, 0.02);
+} else if (O === "heart") {
+  // collect likes: a plump glass heart
+  const h = new THREE.Shape();
+  h.moveTo(0, -1.45);
+  h.bezierCurveTo(-0.5, -1.0, -1.65, -0.35, -1.65, 0.45);
+  h.bezierCurveTo(-1.65, 1.12, -1.15, 1.5, -0.66, 1.5);
+  h.bezierCurveTo(-0.3, 1.5, -0.08, 1.3, 0, 1.05);
+  h.bezierCurveTo(0.08, 1.3, 0.3, 1.5, 0.66, 1.5);
+  h.bezierCurveTo(1.15, 1.5, 1.65, 1.12, 1.65, 0.45);
+  h.bezierCurveTo(1.65, -0.35, 0.5, -1.0, 0, -1.45);
+  const g = new THREE.ExtrudeGeometry(h, { depth: 0.36, bevelEnabled: true, bevelThickness: 0.36, bevelSize: 0.3, bevelSegments: 20, curveSegments: 96 });
+  g.center(); lit(g, [0.8, 0.8, 0.45]);
+  obj.rotation.set(-0.08, -0.42, -0.1);
+} else {
+  // get paid: a glass trophy cup on a stem and a base, with a ring handle on each side
+  const prof = [[0, -1.5], [1.0, -1.5], [1.05, -1.38], [1.0, -1.26], [0.55, -1.18], [0.22, -1.0], [0.16, -0.55], [0.24, -0.3], [0.62, -0.08], [1.06, 0.36], [1.26, 0.9], [1.3, 1.4], [1.2, 1.46], [0, 1.46]].map(([x, y]) => new THREE.Vector2(x, y));
+  const g = new THREE.LatheGeometry(prof, 96); lit(g, [0.8, 0.86, 0.8], [0, 0.04, 0]);
+  for (const sx of [-1, 1]) { const t = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.11, 24, 64), glass); t.position.set(sx * 1.24, 0.8, 0); obj.add(t); }
+  obj.rotation.set(0.16, -0.18, 0);
+}
+// every icon fills the frame the same: scaled to one bounding-sphere size and centred
+const sph = new THREE.Box3().setFromObject(obj).getBoundingSphere(new THREE.Sphere()), k = 2.5 / sph.radius;
+obj.scale.multiplyScalar(k); obj.position.sub(sph.center.multiplyScalar(k));
+scene.add(obj);
+const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(-3, 7, 4); scene.add(key);
+const rim = new THREE.DirectionalLight(0xffffff, 1.4); rim.position.set(4, 2, -5); scene.add(rim);
+r.render(scene, cam);
+window.READY = true;
+</script>
+</body></html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Bug Blaster</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #070a12; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+  canvas { display: block; width: 100vw; height: 100vh; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+(() => {
+  const cv = document.getElementById("c"), cx = cv.getContext("2d");
+  let W = 0, H = 0, DPR = 1, U = 1;
+  function resize() {
+    DPR = Math.min(2, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.floor(W * DPR); cv.height = Math.floor(H * DPR); cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    U = Math.min(W, H) / 100;
+  }
+  window.addEventListener("resize", resize);
+
+  let ac = null;
+  const wake = () => { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } };
+  function beep(f, d = 0.06, type = "square", v = 0.04, slide = 0) {
+    if (!ac) return; const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime;
+    o.type = type; o.frequency.setValueAtTime(f, t0); if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f + slide), t0 + d);
+    g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(g).connect(ac.destination); o.start(t0); o.stop(t0 + d + 0.02);
+  }
+
+  const stars = Array.from({ length: 120 }, () => ({ x: Math.random(), y: Math.random(), z: 0.2 + Math.random() * 0.8 }));
+  // three bug sprites, 8x8, one string per row ("." empty, letters are palette keys)
+  const SPR = {
+    beetle: ["..g..g..", "...gg...", ".gGGGGg.", "gGwGGwGg", "gGGGGGGg", ".gGGGGg.", "g.g..g.g", ".g....g."],
+    moth: ["p......p", "pp.PP.pp", "pPPwwPPp", ".PPPPPP.", "..PPPP..", ".pPPPPp.", "p.P..P.p", "........"],
+    spider: ["r.r..r.r", ".r.RR.r.", "..RRRR..", ".RwRRwR.", "rRRRRRRr", "..RRRR..", ".r.RR.r.", "r......r"],
+  };
+  const PAL = { g: "#2f9e5b", G: "#57d98a", p: "#a35fd6", P: "#d49cff", r: "#b8323c", R: "#ff5e6b", w: "#ffffff" };
+  function sprite(name, x, y, px, frame) {
+    const rows = SPR[name];
+    for (let j = 0; j < 8; j++) for (let i = 0; i < 8; i++) {
+      let ch = rows[j][i]; if (ch === ".") continue;
+      // legs wiggle on odd frames
+      const dy = frame && (j >= 6 || j <= 1) ? (i % 2 ? -1 : 1) * px * 0.4 : 0;
+      cx.fillStyle = PAL[ch]; cx.fillRect(x + (i - 4) * px, y + (j - 4) * px + dy, px + 0.5, px + 0.5);
+    }
+  }
+
+  let state = "title", t = 0, ship, shots, bugs, eshots, parts, drops, score, best = 0, lives, wave, fireT, spread, inv, shake = 0, flash = 0, keys = {}, pointer = null, waveT = 0, overAt = 0, banner = 0;
+
+  function reset() { ship = { x: W / 2, y: H - U * 14 }; shots = []; bugs = []; eshots = []; parts = []; drops = []; score = 0; lives = 3; wave = 0; fireT = 0; spread = 0; inv = 2; waveT = 0.5; }
+  function start() { wake(); reset(); state = "play"; beep(440, 0.2, "sawtooth", 0.04, 440); }
+
+  function nextWave() {
+    wave++; banner = 1.6;
+    const boss = wave % 5 === 0, kinds = ["beetle", "moth", "spider"];
+    if (boss) { bugs.push({ kind: "spider", boss: true, x: W / 2, y: -U * 20, hp: 40 + wave * 6, max: 40 + wave * 6, px: U * 2.4, t: 0, ty: H * 0.22 }); beep(90, 0.8, "sawtooth", 0.06, 40); return; }
+    const n = Math.min(18, 6 + wave * 2), cols = Math.min(6, 3 + Math.floor(wave / 2));
+    for (let i = 0; i < n; i++) {
+      const c = i % cols, r = Math.floor(i / cols);
+      bugs.push({ kind: kinds[(r + wave) % 3], x: W * (0.15 + 0.7 * (c + 0.5) / cols), y: -U * 10 - r * U * 12, hp: 1 + Math.floor(wave / 4), px: U * 0.9, t: Math.random() * 6, ty: H * 0.12 + r * U * 10, home: W * (0.15 + 0.7 * (c + 0.5) / cols) });
+    }
+  }
+
+  function hurt() {
+    if (inv > 0) return;
+    lives--; inv = 2; shake = 16; flash = 0.7; beep(110, 0.5, "sawtooth", 0.07, -60); spread = 0;
+    for (let i = 0; i < 30; i++) { const a = Math.random() * 7, v = 80 + Math.random() * 200; parts.push({ x: ship.x, y: ship.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.7, t: 0, c: "#7cf2ff" }); }
+    if (lives <= 0) { state = "over"; best = Math.max(best, score); overAt = performance.now(); }
+  }
+
+  function update(dt) {
+    t += dt;
+    for (const s of stars) { s.y += dt * s.z * 0.12; if (s.y > 1) { s.y = 0; s.x = Math.random(); } }
+    if (state === "play") {
+      inv = Math.max(0, inv - dt); banner = Math.max(0, banner - dt);
+      const kx = (keys.ArrowRight || keys.KeyD ? 1 : 0) - (keys.ArrowLeft || keys.KeyA ? 1 : 0), ky = (keys.ArrowDown || keys.KeyS ? 1 : 0) - (keys.ArrowUp || keys.KeyW ? 1 : 0);
+      if (kx || ky) { pointer = null; ship.x += kx * U * 90 * dt; ship.y += ky * U * 90 * dt; }
+      if (pointer) { ship.x += (pointer.x - ship.x) * Math.min(1, dt * 14); ship.y += (pointer.y - U * 8 - ship.y) * Math.min(1, dt * 14); }
+      ship.x = Math.max(U * 5, Math.min(W - U * 5, ship.x)); ship.y = Math.max(H * 0.45, Math.min(H - U * 6, ship.y));
+      // auto fire
+      fireT -= dt;
+      if (fireT <= 0) {
+        fireT = 0.16;
+        const ang = spread > 0 ? [-0.18, 0, 0.18] : [0];
+        for (const a of ang) shots.push({ x: ship.x, y: ship.y - U * 4, vx: Math.sin(a) * U * 120, vy: -Math.cos(a) * U * 120 });
+        beep(980, 0.03, "square", 0.015);
+      }
+      spread = Math.max(0, spread - dt);
+      for (const s of shots) { s.x += s.vx * dt; s.y += s.vy * dt; }
+      shots = shots.filter((s) => s.y > -20 && !s.hit);
+      if (!bugs.length) { waveT -= dt; if (waveT <= 0) { nextWave(); waveT = 1.4; } }
+      for (const b of bugs) {
+        b.t += dt;
+        if (b.boss) {
+          b.y += (b.ty - b.y) * Math.min(1, dt * 1.2); b.x = W / 2 + Math.sin(b.t * 0.9) * W * 0.3;
+          if (Math.random() < dt * (2.2 + wave * 0.1)) for (const a of [-0.4, -0.2, 0, 0.2, 0.4]) eshots.push({ x: b.x, y: b.y + U * 9, vx: Math.sin(a) * U * 40, vy: Math.cos(a) * U * 40 });
+        } else {
+          b.y += (b.ty - b.y) * Math.min(1, dt * 2); b.x = b.home + Math.sin(b.t * 1.4) * U * 10;
+          if (Math.random() < dt * (0.08 + wave * 0.02)) eshots.push({ x: b.x, y: b.y + U * 4, vx: 0, vy: U * (36 + wave * 2) });
+          // now and then a bug dives at the ship
+          if (!b.dive && Math.random() < dt * 0.05 * Math.min(4, wave)) b.dive = true;
+          if (b.dive) { b.ty += U * 60 * dt; b.home += (ship.x - b.home) * dt * 0.8; if (b.ty > H + U * 10) { b.ty = -U * 10; b.y = -U * 10; b.dive = false; } }
+        }
+        const r = b.boss ? U * 9 : U * 3.6;
+        for (const s of shots) if (!s.hit && Math.abs(s.x - b.x) < r && Math.abs(s.y - b.y) < r) {
+          s.hit = true; b.hp--; b.flash = 0.06;
+          if (b.hp <= 0) {
+            b.dead = true; score += b.boss ? 500 : 20 * wave; shake = b.boss ? 20 : 4;
+            for (let i = 0; i < (b.boss ? 80 : 14); i++) { const a = Math.random() * 7, v = 60 + Math.random() * (b.boss ? 360 : 180); parts.push({ x: b.x, y: b.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.7, t: 0, c: PAL[b.kind === "beetle" ? "G" : b.kind === "moth" ? "P" : "R"] }); }
+            beep(b.boss ? 70 : 200 + Math.random() * 120, b.boss ? 0.8 : 0.08, "sawtooth", 0.05, b.boss ? -30 : -100);
+            if (b.boss || Math.random() < 0.08) drops.push({ x: b.x, y: b.y, kind: Math.random() < 0.5 || b.boss ? "spread" : "life" });
+          } else beep(400, 0.02, "square", 0.02);
+          break;
+        }
+        if (Math.abs(ship.x - b.x) < r + U * 2.5 && Math.abs(ship.y - b.y) < r + U * 2.5) { if (!b.boss) b.dead = true; hurt(); }
+        if (b.flash) b.flash = Math.max(0, b.flash - dt);
+      }
+      bugs = bugs.filter((b) => !b.dead);
+      for (const e of eshots) { e.x += e.vx * dt; e.y += e.vy * dt; if (Math.abs(e.x - ship.x) < U * 2.4 && Math.abs(e.y - ship.y) < U * 2.4) { e.gone = true; hurt(); } }
+      eshots = eshots.filter((e) => !e.gone && e.y < H + 20 && e.y > -40);
+      for (const d of drops) { d.y += U * 22 * dt; if (Math.abs(d.x - ship.x) < U * 5 && Math.abs(d.y - ship.y) < U * 5) { d.got = true; flash = 0.25; beep(1320, 0.12, "triangle", 0.05, 300); if (d.kind === "spread") spread = 12; else lives = Math.min(5, lives + 1); } }
+      drops = drops.filter((d) => !d.got && d.y < H + 20);
+    }
+    for (const p of parts) { p.t += dt; p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.96; p.vy *= 0.96; }
+    parts = parts.filter((p) => p.t < p.life);
+    shake = Math.max(0, shake - dt * 40); flash = Math.max(0, flash - dt * 2);
+  }
+
+  function txt(s, x, y, size, col, align = "center", w = 800) {
+    cx.font = `${w} ${size}px system-ui, -apple-system, Segoe UI, sans-serif`; cx.textAlign = align; cx.textBaseline = "middle";
+    // lines too wide for the screen wrap onto more lines below the first
+    let lines = [String(s)];
+    if (align === "center" && cx.measureText(lines[0]).width > W - 32) {
+      lines = []; let cur = "";
+      for (const word of String(s).split(" ")) { const tryL = cur ? cur + " " + word : word; if (cur && cx.measureText(tryL).width > W - 32) { lines.push(cur); cur = word; } else cur = tryL; }
+      lines.push(cur);
+    }
+    lines.forEach((l, i) => { const yy = y + i * size * 1.2; cx.fillStyle = "rgba(0,0,0,0.5)"; cx.fillText(l, x + 2, yy + 3); cx.fillStyle = col; cx.fillText(l, x, yy); });
+  }
+  function drawShip(x, y) {
+    if (inv > 0 && Math.floor(t * 12) % 2) return;
+    const s = U * 0.9;
+    cx.fillStyle = "#ff8a3d"; const f = 1 + Math.sin(t * 40) * 0.3;
+    cx.beginPath(); cx.moveTo(x - 1.6 * s, y + 3 * s); cx.lineTo(x, y + (4 + 3 * f) * s); cx.lineTo(x + 1.6 * s, y + 3 * s); cx.fill();
+    cx.fillStyle = "#cfe9ff"; cx.beginPath(); cx.moveTo(x, y - 5 * s); cx.lineTo(x + 2.6 * s, y + 3 * s); cx.lineTo(x - 2.6 * s, y + 3 * s); cx.closePath(); cx.fill();
+    cx.fillStyle = "#4f8cff"; cx.beginPath(); cx.moveTo(x - 2.4 * s, y + 0.5 * s); cx.lineTo(x - 5.4 * s, y + 4 * s); cx.lineTo(x - 1.8 * s, y + 3 * s); cx.fill(); cx.beginPath(); cx.moveTo(x + 2.4 * s, y + 0.5 * s); cx.lineTo(x + 5.4 * s, y + 4 * s); cx.lineTo(x + 1.8 * s, y + 3 * s); cx.fill();
+    cx.fillStyle = "#7cf2ff"; cx.beginPath(); cx.ellipse(x, y - 0.6 * s, 0.9 * s, 1.6 * s, 0, 0, 7); cx.fill();
+  }
+  function draw() {
+    cx.fillStyle = "#070a12"; cx.fillRect(0, 0, W, H);
+    cx.save(); if (shake) cx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    for (const s of stars) { cx.globalAlpha = 0.25 + s.z * 0.75; cx.fillStyle = s.z > 0.8 ? "#bfe3ff" : "#fff"; cx.fillRect(s.x * W, s.y * H, s.z * 2, s.z * 2 + (state === "play" ? s.z * 4 : 0)); }
+    cx.globalAlpha = 1;
+    // a nebula glow
+    const ng = cx.createRadialGradient(W * 0.75, H * 0.25, 10, W * 0.75, H * 0.25, Math.max(W, H) * 0.6); ng.addColorStop(0, "rgba(120,60,200,0.18)"); ng.addColorStop(1, "rgba(0,0,0,0)"); cx.fillStyle = ng; cx.fillRect(0, 0, W, H);
+    if (state !== "title") {
+      for (const s of shots) { cx.fillStyle = spread ? "#ffd166" : "#7cf2ff"; cx.fillRect(s.x - 1.5, s.y - U * 2, 3, U * 3); }
+      for (const e of eshots) { cx.fillStyle = "#ff5e6b"; cx.beginPath(); cx.arc(e.x, e.y, U * 0.9, 0, 7); cx.fill(); }
+      for (const b of bugs) {
+        const fr = Math.floor(b.t * 6) % 2;
+        if (b.flash) { cx.globalAlpha = 0.5; }
+        sprite(b.kind, b.x, b.y, b.px * (b.boss ? 1 : 1) , fr);
+        cx.globalAlpha = 1;
+        if (b.boss) { cx.fillStyle = "#331018"; cx.fillRect(W * 0.2, U * 14, W * 0.6, U * 1.6); cx.fillStyle = "#ff5e6b"; cx.fillRect(W * 0.2, U * 14, W * 0.6 * b.hp / b.max, U * 1.6); }
+      }
+      for (const d of drops) { cx.fillStyle = d.kind === "spread" ? "#ffd166" : "#ff7aa2"; cx.shadowColor = cx.fillStyle; cx.shadowBlur = 14; cx.beginPath(); cx.arc(d.x, d.y, U * 2.6, 0, 7); cx.fill(); cx.shadowBlur = 0; txt(d.kind === "spread" ? "3" : "♥", d.x, d.y + 1, U * 3, "#070a12", "center", 900); }
+      drawShip(ship.x, ship.y);
+    } else {
+      sprite("beetle", W * 0.3, H * 0.62, U * 1.4, Math.floor(t * 5) % 2); sprite("moth", W * 0.5, H * 0.58, U * 1.4, Math.floor(t * 5 + 1) % 2); sprite("spider", W * 0.7, H * 0.62, U * 1.4, Math.floor(t * 5) % 2);
+    }
+    for (const p of parts) { cx.globalAlpha = 1 - p.t / p.life; cx.fillStyle = p.c; cx.fillRect(p.x, p.y, 3, 3); }
+    cx.globalAlpha = 1; cx.restore();
+    if (flash) { cx.fillStyle = `rgba(255,255,255,${flash * 0.25})`; cx.fillRect(0, 0, W, H); }
+    const s = Math.min(W, H);
+    if (state === "play" && !COVER) {
+      txt(String(score), 20, 34, U * 6, "#ffffff", "left");
+      txt("WAVE " + wave, W / 2, 34, U * 3.4, "#9fb4d9");
+      txt("▲".repeat(Math.max(0, lives)), W - 20, 34, U * 4, "#7cf2ff", "right");
+      if (banner > 0) { cx.globalAlpha = Math.min(1, banner); txt(wave % 5 === 0 ? "BOSS: THE BIG BUG" : "WAVE " + wave, W / 2, H * 0.42, s * 0.08, wave % 5 === 0 ? "#ff5e6b" : "#ffd166"); cx.globalAlpha = 1; }
+    }
+    if (state === "title") {
+      txt("BUG BLASTER", W / 2, H * 0.24, s * 0.12, "#7cf2ff");
+      txt("The code is full of bugs. Literally.", W / 2, H * 0.24 + s * 0.1, Math.max(15, s * 0.04), "#ffffff", "center", 600);
+      txt("Your ship fires by itself. Dodge, collect power-ups, beat the boss every 5 waves.", W / 2, H * 0.24 + s * 0.155, Math.max(12, s * 0.028), "#9fb4d9", "center", 600);
+      txt("Arrows / WASD  ·  drag on phone", W / 2, H * 0.8, Math.max(13, s * 0.03), "#9fb4d9", "center", 700);
+      txt("Press Space or tap to start", W / 2, H * 0.88, Math.max(16, s * 0.045), `rgba(255,209,102,${0.6 + Math.sin(t * 4) * 0.4})`);
+    }
+    if (state === "over") {
+      cx.fillStyle = "rgba(7,10,18,0.7)"; cx.fillRect(0, 0, W, H);
+      txt("SEGFAULT", W / 2, H * 0.32, s * 0.13, "#ff5e6b");
+      txt(score + " points  ·  wave " + wave, W / 2, H * 0.32 + s * 0.11, Math.max(16, s * 0.045), "#ffffff");
+      txt("Best this session " + best, W / 2, H * 0.32 + s * 0.17, Math.max(14, s * 0.035), "#ffd166", "center", 700);
+      txt("Press Space or tap to play again", W / 2, H * 0.74, Math.max(16, s * 0.042), `rgba(255,255,255,${0.6 + Math.sin(t * 4) * 0.4})`);
+    }
+  }
+
+  window.addEventListener("keydown", (e) => {
+    keys[e.code] = true;
+    if (e.code === "Space" || e.code === "Enter") { e.preventDefault(); if (state !== "play" && performance.now() - overAt > 400) start(); }
+    if (e.code.startsWith("Arrow")) e.preventDefault();
+  });
+  window.addEventListener("keyup", (e) => (keys[e.code] = false));
+  window.addEventListener("blur", () => (keys = {}));
+  cv.addEventListener("pointerdown", (e) => { e.preventDefault(); wake(); if (state !== "play") { if (performance.now() - overAt > 400) start(); return; } pointer = { x: e.clientX, y: e.clientY }; });
+  cv.addEventListener("pointermove", (e) => { if (state === "play" && (pointer || e.pointerType === "mouse")) pointer = { x: e.clientX, y: e.clientY }; });
+  window.addEventListener("pointerup", (e) => { if (e.pointerType !== "mouse") pointer = null; });
+  ["touchstart", "touchmove"].forEach((ev) => cv.addEventListener(ev, (e) => e.preventDefault(), { passive: false }));
+
+  let last = performance.now(), hidden = false;
+  document.addEventListener("visibilitychange", () => { hidden = document.hidden; last = performance.now(); });
+  function frame(now) { const dt = Math.min(1 / 30, (now - last) / 1000); last = now; if (!hidden) { update(dt); draw(); } requestAnimationFrame(frame); }
+  // #cover: a still for the thumbnail (the ship mid-frame firing into a wave of bugs, one popping, no HUD)
+  const COVER = location.hash === "#cover";
+  resize(); reset();
+  if (COVER) {
+    state = "play"; inv = 0; banner = 0;
+    ship = { x: W * 0.5, y: H * 0.7 };
+    const kinds = ["beetle", "moth", "spider"];
+    for (let r = 0; r < 2; r++) for (let c = 0; c < 4; c++) if (!(r === 1 && c === 2)) bugs.push({ kind: kinds[(r + c) % 3], x: W * (0.2 + 0.6 * (c + 0.5) / 4), y: H * 0.2 + r * U * 12, hp: 1, px: U * 1.1, t: c, ty: 0, home: 0 });
+    for (let i = 0; i < 4; i++) shots.push({ x: W * 0.5, y: H * 0.62 - i * U * 7 });
+    eshots.push({ x: W * 0.3, y: H * 0.44 }, { x: W * 0.72, y: H * 0.5 });
+    const px = W * (0.2 + 0.6 * 2.5 / 4), py = H * 0.2 + U * 12;
+    for (let i = 0; i < 20; i++) { const a = i / 20 * 6.28, v = U * (2 + (i % 4) * 1.5); parts.push({ x: px + Math.cos(a) * v, y: py + Math.sin(a) * v, vx: 0, vy: 0, life: 1, t: (i % 3) * 0.2, c: i % 2 ? "#7cf2ff" : "#ffd166" }); }
+    update = () => {};
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

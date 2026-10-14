@@ -1,0 +1,8 @@
+node_modules
+.next
+.next-prod
+.env*
+!.env.example
+.vercel
+.DS_Store
+tools/out
