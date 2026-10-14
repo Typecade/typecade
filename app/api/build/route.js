@@ -73,6 +73,7 @@ export async function POST(req) {
         model: MODEL.id,
         messages: [{ role: "system", content: SYSTEM }, { role: "user", content: userMessage(prompt) }],
         max_tokens: LIMITS.maxOutputTokens,
+        reasoning: { effort: MODEL.effort, exclude: true },
         temperature: 0.7,
         stream: true,
         usage: { include: true },
