@@ -33,7 +33,8 @@ export function Decode({ text, as: Tag = "h2", className, id }) {
   return <Tag ref={ref} id={id} className={className} aria-label={text.replace(/\n/g, " ")}><span aria-hidden="true">{out.split("\n").map((l, i, a) => <span key={i}>{l}{i < a.length - 1 && <br />}</span>)}</span></Tag>;
 }
 
-// the hero headline, typed one key at a time after a short beat, with a blinking block cursor
+// the hero headline, typed one key at a time after a short beat behind a block cursor that blinks out when it is done;
+// while the intro film runs (html[data-intro]) it waits for the film to end, so the typing is actually seen
 export function Typed({ lines, className, id, delay = 500 }) {
   const full = lines.join("\n");
   const [n, setN] = useState(full.length);
@@ -42,13 +43,15 @@ export function Typed({ lines, className, id, delay = 500 }) {
     setN(0);
     let i = 0, t;
     const tick = () => { i++; setN(i); if (i < full.length) t = setTimeout(tick, 70 + Math.random() * 60); };
-    t = setTimeout(tick, delay);
-    return () => clearTimeout(t);
+    const go = () => { t = setTimeout(tick, delay); };
+    if (document.documentElement.dataset.intro) addEventListener("tg:intro-done", go, { once: true });
+    else go();
+    return () => { clearTimeout(t); removeEventListener("tg:intro-done", go); };
   }, [full, delay]);
   const shown = full.slice(0, n).split("\n");
   return (
     <h1 id={id} className={className} aria-label={lines.join(" ")}>
-      <span aria-hidden="true">{shown.map((l, i) => <span key={i}>{l}{i < shown.length - 1 && <br />}</span>)}<i className="cursor" /></span>
+      <span aria-hidden="true">{shown.map((l, i) => <span key={i}>{l}{i < shown.length - 1 && <br />}</span>)}<i className={n >= full.length ? "cursor done" : "cursor"} /></span>
     </h1>
   );
 }

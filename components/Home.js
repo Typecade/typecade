@@ -115,11 +115,11 @@ export default function Home({ initial, stats: s0, board: b0, links }) {
         <section className="sec board" id="leaderboard" aria-labelledby="board-h">
           <div className="board-copy" data-reveal>
             <Decode id="board-h" text={"GET PAID WHEN\nPEOPLE PLAY\nYOUR GAME."} />
-            <p>15% of $TYPECADE's creator fees fill the prize pool. Every day at 00:00 UTC the pool is shared among the makers of the {board?.slots ?? 10} most-liked games of the day, in proportion to their likes. Holders of $TYPECADE worth {stats?.likeMinSol ?? 0.1} SOL can like, once per game, and nobody can like their own.</p>
+            <p>15% of $TYPECADE's creator fees fill the prize pool. Every day at 00:00 UTC the pool is shared among the makers of the {board?.slots ?? 10} most-liked games of the day, in proportion to their likes. A game needs at least {board?.minLikes ?? 3} likes to qualify. Holders of $TYPECADE worth {stats?.likeMinSol ?? 0.1} SOL can like, once per game, and nobody can like their own.</p>
             <dl className="prize-stats">
               <div><dt>POOL</dt><dd>{typeof stats?.tankSol === "number" ? `${stats.tankSol.toFixed(3)} SOL` : "fills at launch"}</dd></div>
               <div><dt>ROUND ENDS IN</dt><dd className="mono clockface">{clock}</dd></div>
-              <div><dt>TO EARN</dt><dd>{board?.minLikes ?? 3}+ likes</dd></div>
+              <div><dt>PAID TO</dt><dd>TOP {board?.slots ?? 10}</dd></div>
             </dl>
           </div>
           <div className="lb" data-reveal>

@@ -54,7 +54,7 @@ export default async function Docs() {
           <section id="paid"><h2>Get paid</h2>
             <p>15% of $TYPECADE's creator fees go into the prize pool wallet <a className="mono" href={`https://solscan.io/account/${POOL}`} target="_blank" rel="noopener">{POOL}</a>. Every day at 00:00 UTC the pool (all but a 0.02 SOL reserve for fees) is shared among the makers of the day's <strong>{PRIZE_SLOTS} most-liked games</strong>, in proportion to the likes each game got that day.</p>
             <ul>
-              <li>A game needs at least {MIN_WIN_LIKES} likes that day to earn. Starter games made by the team never earn.</li>
+              <li>A game needs at least {MIN_WIN_LIKES} likes that day to earn. The team never earns from the pool: neither the starter games nor any game made with the team and developer wallets listed in the coin description.</li>
               <li>A maker with several games in the top {PRIZE_SLOTS} gets the sum, in one transfer.</li>
               <li>No game with enough likes means the pool rolls over to the next day.</li>
               <li>Every payout is one on-chain transaction, linked on the leaderboard.</li>

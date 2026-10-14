@@ -1,11 +1,13 @@
 "use client";
 // The hero is the builder. Left: TYPE A GAME. and the one-sentence form. Right: the 3D Enter key, which presses down when a
 // game starts; then the same space becomes the console where the code pours in, and then the game itself.
-// Making games takes $TYPECADE worth HOLDER_MIN_SOL (checked again on the server); the form says exactly what is missing.
+// Making games takes a connected wallet with $TYPECADE worth HOLDER_MIN_SOL (checked again on the server). The button
+// says up front what is missing: OPENS AT LAUNCH before the coin exists, CONNECT WALLET without a wallet, and a note with
+// a buy link when the wallet holds too little.
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { openPicker, refresh, useAccount } from "./account.js";
-import { Again, Code, Expand, Link, Play, XMark } from "./icons.js";
+import { Again, Code, Expand, Link, Play, Wallet, XMark } from "./icons.js";
 import Key3D from "./Key3D.js";
 import { Typed, useTypingPlaceholder } from "./fx.js";
 
@@ -66,9 +68,10 @@ export default function Hero({ onMade }) {
     e?.preventDefault();
     const p = prompt.trim();
     if (phase === "building") return;
-    if (p.length < 3) { setNote({ text: "Type your game idea first, in one sentence." }); inputRef.current?.focus(); return; }
     const b = blocker();
-    if (b) { setNote(b); if (b.action === "connect") openPicker(true); return; }
+    if (b?.action === "connect") { setNote(null); openPicker(true); return; }
+    if (b) { setNote(b); return; }
+    if (p.length < 3) { setNote({ text: "Type your game idea first, in one sentence." }); inputRef.current?.focus(); return; }
     keyRef.current?.press();
     setNote(null);
     await new Promise((r) => setTimeout(r, 260));
@@ -111,6 +114,10 @@ export default function Hero({ onMade }) {
   const link = game ? `${location.origin}/play/${game.id}` : "";
   const post = game ? `https://x.com/intent/post?text=${encodeURIComponent(`I typed “${game.prompt}” and got a game:`)}&url=${encodeURIComponent(link)}` : "";
   const pump = me?.mint ? `https://pump.fun/coin/${me.mint}` : null;
+  // what the button and the standing note say before anyone clicks
+  const gate = phase === "idle" ? blocker() : null;
+  const closed = Boolean(gate && me && !me.mint), tooLittle = gate?.action === "buy";
+  const shown = note ?? (closed || tooLittle ? gate : null);
 
   return (
     <section className={`hero hero-${phase}`} id="create" aria-labelledby="hero-h">
@@ -125,15 +132,17 @@ export default function Hero({ onMade }) {
               placeholder={ph} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) build(e); }} />
-            <button type="submit" className="make-btn" disabled={phase === "building"}>
-              {phase === "building" ? `WRITING ${elapsed.toFixed(0)}S` : <><Play width={16} height={16} /> MAKE MY GAME</>}
+            <button type="submit" className="make-btn" disabled={phase === "building" || closed || tooLittle}>
+              {phase === "building" ? `WRITING ${elapsed.toFixed(0)}S`
+                : closed ? "OPENS AT LAUNCH"
+                : gate?.action === "connect" ? <><Wallet width={17} height={17} /> CONNECT WALLET</>
+                : <><Play width={16} height={16} /> MAKE MY GAME</>}
             </button>
           </div>
-          {note && (
-            <p className={`make-note${note.error ? " err" : ""}`} role={note.error ? "alert" : "status"}>
-              {note.text}
-              {note.action === "connect" && <button type="button" onClick={() => openPicker(true)}>Connect wallet</button>}
-              {note.action === "buy" && pump && <a href={pump} target="_blank" rel="noopener">Buy $TYPECADE</a>}
+          {shown && (
+            <p className={`make-note${shown.error ? " err" : ""}`} role={shown.error ? "alert" : "status"}>
+              {shown.text}
+              {shown.action === "buy" && pump && <a href={pump} target="_blank" rel="noopener">Buy $TYPECADE</a>}
             </p>
           )}
           {phase === "idle" && (
@@ -141,7 +150,7 @@ export default function Hero({ onMade }) {
               {EXAMPLES.map((x) => <li key={x}><button type="button" onClick={() => { setPrompt(x); inputRef.current?.focus(); }}>{x}</button></li>)}
             </ul>
           )}
-          <p className="make-fine">Holders of $TYPECADE worth {me?.holderMinSol ?? 1} SOL make games. Every game is public and open source.</p>
+          <p className="make-fine">Connect a wallet that holds $TYPECADE worth {me?.holderMinSol ?? 1} SOL to make games. Every game is public and open source.</p>
         </form>
       </div>
 

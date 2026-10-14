@@ -58,6 +58,7 @@ export default function Intro() {
     try { seen = sessionStorage.getItem("tg:intro") === "1"; } catch {}
     if (seen || location.search.includes("nointro") || location.search.includes("still") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     setStage("gate");
+    document.documentElement.dataset.intro = "1"; // the hero headline waits for the film (components/fx.js)
     if (location.search.includes("introtest")) setTimeout(() => document.querySelector(".gate-start")?.click(), 50);
     const t0 = performance.now(), id = setInterval(() => { const p = Math.min(100, Math.round((performance.now() - t0) / 9)); setPct(p); if (p >= 100) clearInterval(id); }, 30);
     return () => clearInterval(id);
@@ -100,6 +101,8 @@ export default function Intro() {
     if (stage === "out" || stage === "off") return;
     timers.current.forEach(clearTimeout);
     setStage("out");
+    delete document.documentElement.dataset.intro;
+    dispatchEvent(new Event("tg:intro-done"));
     setTimeout(() => { setStage("off"); snd.close(); }, 900);
   }
   if (stage === "off") return null;

@@ -84,7 +84,7 @@ export function Footer({ mint, links }) {
     <footer className="foot">
       <p className="foot-big">PRESS ENTER<br />TO PLAY</p>
       {mint && <button type="button" className="foot-ca" onClick={() => { navigator.clipboard?.writeText(mint); setCopied(true); setTimeout(() => setCopied(false), 1500); }}><span>CA</span>{mint}<em>{copied ? "copied" : "copy"}</em></button>}
-      <p className="foot-links"><a href="/docs">Docs</a><a href={links.source} target="_blank" rel="noopener"><GitHub size={16} /> Site code</a><a href={links.games} target="_blank" rel="noopener"><GitHub size={16} /> Games</a><a href={links.x} target="_blank" rel="noopener"><XMark size={14} /> X</a></p>
+      <p className="foot-links"><a href="/docs">Docs</a><a href={links.source} target="_blank" rel="noopener"><GitHub size={16} /> Site code</a><a href={links.games} target="_blank" rel="noopener"><GitHub size={16} /> Games</a><a href={links.x} target="_blank" rel="noopener"><XMark size={14} /> {links.x.replace(/^.*\//, "@")}</a></p>
       <p className="foot-fine">Games run sealed: no network, no logins, no wallets inside a game. $TYPECADE is a memecoin; nobody promises it any value, and you can lose what you put in. $TYPECADE's creator fees split on-chain: 50% to the developer, 35% to the AI tank that pays for the games, 15% to the daily prize pool for makers.</p>
     </footer>
   );
