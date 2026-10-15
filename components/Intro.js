@@ -56,6 +56,8 @@ export default function Intro() {
   useEffect(() => {
     let seen = false;
     try { seen = sessionStorage.getItem("tg:intro") === "1"; } catch {}
+    // a reload plays it again; coming back to the home page from a game page in the same visit does not
+    if (performance.getEntriesByType?.("navigation")?.[0]?.type === "reload") seen = false;
     if (seen || location.search.includes("nointro") || location.search.includes("still") || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     setStage("gate");
     document.documentElement.dataset.intro = "1"; // the hero headline waits for the film (components/fx.js)
