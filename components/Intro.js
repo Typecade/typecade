@@ -1,6 +1,7 @@
 "use client";
 // The opener: PRESS START, then a 15-second film that explains Typecade in seven cards, with sound, and glides into the
-// page. Once per visit; ?nointro or reduced motion skips it; SKIP and Esc end it at any point.
+// page. Once per visit (a reload plays it again); ?nointro or reduced motion leaves it out. It cannot be skipped: the film
+// plays to its last scene, where ENTER (or the Enter key) opens the site.
 import { useEffect, useRef, useState } from "react";
 import { Heart, Play } from "./icons.js";
 
@@ -70,7 +71,7 @@ export default function Intro() {
     const key = (e) => {
       if (e.key === "Tab") return;
       if (stage === "gate") { e.preventDefault(); play(); }
-      else if (e.key === "Escape" || (e.key === "Enter" && scene >= 6)) finish();
+      else if (e.key === "Enter" && scene >= 6) finish();
     };
     addEventListener("keydown", key);
     return () => removeEventListener("keydown", key);
@@ -150,7 +151,6 @@ export default function Intro() {
           <div className="film-bar" aria-hidden="true"><span /></div>
           <div className="film-ctl">
             <button type="button" onClick={snd.mute}>{snd.on ? "SOUND ON" : "SOUND OFF"}</button>
-            <button type="button" onClick={finish}>SKIP</button>
           </div>
         </div>
       )}
