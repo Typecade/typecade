@@ -1,15 +1,19 @@
 // POST /api/build {prompt}: one sentence in, one game out, streamed while the model writes it. Only for $TYPECADE holders:
 // the signed-in wallet needs $TYPECADE worth HOLDER_MIN_SOL (lib/holding.js).
+// POST /api/build {fix, errors}: the one repair. The maker's page test-plays every new game (app/g/[id]?test=1); if it
+// threw errors, the engine gets its own file back with them and writes a corrected game under a new id, which replaces
+// the broken one in the gallery. A repair is free for the maker (it does not count as one of their games) and goes
+// through the same AI fuse.
 // The answer is newline-delimited JSON: {t:"start",id}, many {t:"c",d:<code>}, then {t:"done",id,title} or {t:"err",m}.
 // Before the call: the wallet's games for the day, a backstop per address, one build at a time per wallet, and the day's
 // AI fuse (the worst case is booked first, so parallel builds cannot pass it; the real cost replaces it at the end). The
 // model keeps writing and the game is saved even if the visitor closes the page, because the money is spent either way.
 import { waitUntil } from "@vercel/functions";
 import { HOLDER_MIN_SOL, LIMITS, MODEL, OPENROUTER_KEY, SITE, worstCaseMicro } from "../../../lib/config.js";
-import { extractHtml, newId, publishGame, saveGame, screen, setGame, titleOf } from "../../../lib/games.js";
+import { extractHtml, getGame, newId, publishGame, saveGame, screen, setGame, titleOf } from "../../../lib/games.js";
 import { clientIp, ipHash, sameOrigin } from "../../../lib/guard.js";
 import { gameMint, holding } from "../../../lib/holding.js";
-import { SYSTEM, userMessage } from "../../../lib/prompt.js";
+import { SYSTEM, fixMessage, userMessage } from "../../../lib/prompt.js";
 import { sessionWallet } from "../../../lib/session.js";
 import { K, redis, today } from "../../../lib/store.js";
 
@@ -21,13 +25,19 @@ const json = (status, m) => Response.json({ error: m }, { status, headers: { "ca
 export async function POST(req) {
   if (!sameOrigin(req)) return json(403, "Games are made on typecade.app.");
   const body = await req.json().catch(() => null);
-  const prompt = String(body?.prompt ?? "").replace(/\s+/g, " ").trim();
+  const fixId = body?.fix ? String(body.fix) : null;
+  const errors = Array.isArray(body?.errors) ? body.errors.slice(0, 6).map((e) => String(e).slice(0, 240)) : [];
+  const old = fixId ? await getGame(fixId).catch(() => null) : null;
+  if (fixId && (!old || old.by === "team" || !errors.length)) return json(400, "There is nothing to repair.");
+  if (old && (old.fixedBy || old.fixOf)) return json(409, "This game has already had its repair.");
+  const prompt = old ? old.prompt : String(body?.prompt ?? "").replace(/\s+/g, " ").trim();
   if (prompt.length < LIMITS.promptMin) return json(400, "Describe your game in a few words.");
   if (prompt.length > LIMITS.promptMax) return json(400, `Keep it to ${LIMITS.promptMax} characters.`);
   const no = screen(prompt);
   if (no) return json(400, no);
-  // development only: with MOCK_ENGINE=1 and no key, a starter game streams in as if the model wrote it (no AI money spent)
-  const mock = !OPENROUTER_KEY && process.env.NODE_ENV !== "production" && process.env.MOCK_ENGINE === "1";
+  // development only: with MOCK_ENGINE=1 and no key (or the x-mock header), a starter game streams in as if the model wrote
+  // it (no AI money spent)
+  const mock = process.env.NODE_ENV !== "production" && process.env.MOCK_ENGINE === "1" && (!OPENROUTER_KEY || req.headers.get("x-mock") === "1");
   if (!OPENROUTER_KEY && !mock) return json(503, "The game engine is not connected yet.");
 
   // holders only. On a dev machine with DEV_OPEN=1, only the quality tool (tools/quality.mjs sends x-dev-open: 1) may build
@@ -35,6 +45,7 @@ export async function POST(req) {
   const devOpen = process.env.NODE_ENV !== "production" && process.env.DEV_OPEN === "1" && req.headers.get("x-dev-open") === "1";
   const wallet = (await sessionWallet(req)) ?? (devOpen ? "dev" : null);
   if (!wallet) return json(401, "Connect your wallet to make a game.");
+  if (old && (old.wallet ?? "dev") !== wallet) return json(403, "Only the game's maker can repair it.");
   if (!devOpen) {
     if (!(await gameMint())) return json(403, "Making games opens when $TYPECADE launches.");
     const hold = await holding(wallet, true).catch(() => null);
@@ -42,10 +53,11 @@ export async function POST(req) {
   }
   const ip = clientIp(req), day = today();
   const ipKey = K("ip", ip, day), walletKey = K("made", wallet, day), busyKey = K("busy", wallet), usdKey = K("usd", day);
-  const [n, nw] = [await redis(["INCRBY", ipKey, "1"]), await redis(["INCRBY", walletKey, "1"])];
+  // a repair does not count as one of the maker's games
+  const [n, nw] = old ? [0, 0] : [await redis(["INCRBY", ipKey, "1"]), await redis(["INCRBY", walletKey, "1"])];
   if (n === 1) await redis(["EXPIRE", ipKey, "90000"]);
   if (nw === 1) await redis(["EXPIRE", walletKey, "90000"]);
-  const refundIp = () => Promise.all([redis(["INCRBY", ipKey, "-1"]), redis(["INCRBY", walletKey, "-1"])]).catch(() => {});
+  const refundIp = () => old ? Promise.resolve() : Promise.all([redis(["INCRBY", ipKey, "-1"]), redis(["INCRBY", walletKey, "-1"])]).catch(() => {});
   if (nw > LIMITS.perWalletDay || n > LIMITS.perIpDay) {
     await refundIp();
     return json(429, `That's ${LIMITS.perWalletDay} games for this wallet today. New ones from 00:00 UTC.`);
@@ -54,7 +66,7 @@ export async function POST(req) {
     await refundIp();
     return json(429, "Your last game is still being made.");
   }
-  const reserved = worstCaseMicro(Math.ceil((SYSTEM.length + prompt.length) / 3.2));
+  const reserved = worstCaseMicro(Math.ceil((SYSTEM.length + prompt.length + (old ? old.html.length + 800 : 0)) / 3.2));
   const used = await redis(["INCRBY", usdKey, String(reserved)]);
   if (used === reserved) await redis(["EXPIRE", usdKey, "172800"]);
   const release = (actual = 0) => Promise.all([redis(["INCRBY", usdKey, String(actual - reserved)]), redis(["DEL", busyKey])]).catch(() => {});
@@ -64,14 +76,16 @@ export async function POST(req) {
   }
 
   let up;
-  if (mock) up = await mockUpstream();
+  if (mock) up = await mockUpstream(!old && /broken/i.test(prompt));
   else try {
     up = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: { authorization: `Bearer ${OPENROUTER_KEY}`, "content-type": "application/json", "http-referer": SITE, "x-title": "Typecade" },
       body: JSON.stringify({
         model: MODEL.id,
-        messages: [{ role: "system", content: SYSTEM }, { role: "user", content: userMessage(prompt) }],
+        messages: old
+          ? [{ role: "system", content: SYSTEM }, { role: "user", content: userMessage(prompt) }, { role: "assistant", content: old.html }, { role: "user", content: fixMessage(errors) }]
+          : [{ role: "system", content: SYSTEM }, { role: "user", content: userMessage(prompt) }],
         max_tokens: LIMITS.maxOutputTokens,
         reasoning: { effort: MODEL.effort, exclude: true },
         temperature: 0.7,
@@ -132,8 +146,10 @@ export async function POST(req) {
       await refundIp();
       send({ t: "err", m: finish === "length" ? "The game got too long. Try a simpler idea." : "The game came out incomplete. Try again." });
     } else {
-      const g = { id, prompt, title: titleOf(html, prompt), html, model: MODEL.id, ms: Date.now() - started, costUsd: +costUsd.toFixed(4), at: Date.now(), by: null, wallet: wallet === "dev" ? null : wallet, plays: 0, repo: null, ipHash: ipHash(ip) };
+      const g = { id, prompt, title: titleOf(html, prompt), html, model: MODEL.id, ms: Date.now() - started, costUsd: +costUsd.toFixed(4), at: Date.now(), by: null, wallet: wallet === "dev" ? null : wallet, plays: 0, repo: null, ipHash: ipHash(ip), ...(old ? { fixOf: old.id, ms: (old.ms ?? 0) + (Date.now() - started) } : {}) };
       await saveGame(g);
+      // the repaired game takes the broken one's place: out of the gallery, and its page sends visitors to the new one
+      if (old) await Promise.all([setGame({ ...old, fixedBy: id }), redis(["LREM", K("recent"), "0", old.id]), redis(["INCRBY", K("count"), "-1"])]).catch(() => {});
       send({ t: "done", id, title: g.title, ms: g.ms });
       // open source: the file goes to the public games repo; the link lands on the game when GitHub has it
       try {
@@ -148,11 +164,13 @@ export async function POST(req) {
 }
 
 // an OpenRouter-shaped stream of a starter game, about 10 s long, for building the site without spending AI money
-async function mockUpstream() {
+async function mockUpstream(broken = false) {
   const { readFile } = await import("node:fs/promises");
   const { STARTER } = await import("../../../lib/starter.js");
   const pick = STARTER[Math.floor(Math.random() * STARTER.length)];
-  const html = await readFile(`${process.cwd()}/starter/${pick.id}.html`, "utf8");
+  let html = await readFile(`${process.cwd()}/starter/${pick.id}.html`, "utf8");
+  // a sentence with "broken" in it gets a game that throws a second after start, to try the test run and the repair
+  if (broken) html = html.replace(/<\/body>/i, "<script>setTimeout(function(){ notDefinedAnywhere.start(); }, 1200)</script></body>");
   const enc = new TextEncoder(), size = Math.ceil(html.length / 160);
   const body = new ReadableStream({
     async start(c) {

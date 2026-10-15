@@ -62,7 +62,7 @@ export default function Home({ initial, stats: s0, board: b0, links }) {
     return () => clearInterval(id);
   }, [merge]);
   const onMade = useCallback((g) => {
-    setGames((old) => [{ ...old.find((o) => o.id === g.id), ...g }, ...old.filter((o) => o.id !== g.id)]);
+    setGames((old) => [{ ...old.find((o) => o.id === g.id), ...g }, ...old.filter((o) => o.id !== g.id && o.id !== g.replaces)]);
     setFresh((f) => new Set([...f, g.id]));
   }, []);
 

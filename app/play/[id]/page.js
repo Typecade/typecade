@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import GamePage from "../../../components/GamePage.js";
 import { GAMES_REPO, SOURCE_REPO } from "../../../lib/config.js";
 import { getGame, listGames } from "../../../lib/games.js";
@@ -24,6 +24,8 @@ export default async function Play({ params }) {
   const { id } = await params;
   const g = await getGame(id).catch(() => null);
   if (!g) notFound();
+  // a game that was repaired right after it was made lives on under its new id
+  if (g.fixedBy) redirect(`/play/${g.fixedBy}`);
   const [likes, plays, board, more, mint] = await Promise.all([likeCount(id).catch(() => 0), redis(["GET", K("plays", id)]).catch(() => 0), leaderboard().catch(() => null), listGames(30).catch(() => []), gameMint().catch(() => null)]);
   const rank = board?.rows.findIndex((r) => r.id === id);
   const thumb = (await hasThumb(g)) ? thumbOf(g) : null;

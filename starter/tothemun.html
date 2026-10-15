@@ -37,11 +37,11 @@
 
   // stars in three depths
   const stars = Array.from({ length: 140 }, () => ({ x: Math.random(), y: Math.random(), z: 0.2 + Math.random() * 0.8 }));
-  let state = "title", t = 0, rocket, obs, coins, parts, dist, best = 0, speed, spawnT, shake = 0, flash = 0, holding = false, overAt = 0;
+  let state = "title", t = 0, rocket, obs, coins, parts, dist, best = 0, speed, shake = 0, flash = 0, holding = false, overAt = 0;
 
   function reset() {
     rocket = { y: H * 0.5, vy: 0, tilt: 0 };
-    obs = []; coins = []; parts = []; dist = 0; speed = 34; spawnT = 1.2;
+    obs = []; coins = []; parts = []; dist = 0; speed = 34;
   }
   // distance -> market cap: starts at $5k, the moon is $1B
   const mcap = (d) => { const v = 5000 * Math.pow(1.045, d); return v >= 1e9 ? "$1B 🌕" : v >= 1e6 ? "$" + (v / 1e6).toFixed(2) + "M" : "$" + (v / 1e3).toFixed(1) + "k"; };
@@ -56,7 +56,10 @@
   function spawn() {
     // a bear paw from the top or bottom, or a FUD cloud in the middle, leaving a gap the rocket can fly through
     const gap = Math.max(H * 0.26, H * 0.42 - dist * 0.12);
-    const gy = H * 0.18 + Math.random() * (H * 0.64 - gap) + gap / 2;
+    // the next gap is never far above or below the last one, so every pair of paws can be flown
+    const lo = H * 0.18 + gap / 2, hi = H * 0.82 - gap / 2, last = obs[obs.length - 1];
+    const prev = last ? (last.top + last.bot) / 2 : H * 0.5;
+    const gy = Math.max(lo, Math.min(hi, prev + (Math.random() - 0.5) * H * 0.44));
     obs.push({ x: W + 40, top: gy - gap / 2, bot: gy + gap / 2, w: Math.max(46, U * 12), passed: false });
     if (Math.random() < 0.7) coins.push({ x: W + 40 + U * 30, y: gy + (Math.random() - 0.5) * gap * 0.4, got: false });
   }
@@ -72,14 +75,17 @@
       rocket.tilt += ((rocket.vy / H) * 0.9 - rocket.tilt) * Math.min(1, dt * 10);
       if (holding && Math.random() < 0.9) parts.push({ x: W * 0.28 - U * 6, y: rocket.y + U * 1.5, vx: -120 - Math.random() * 80, vy: (Math.random() - 0.5) * 60 + 80, life: 0.35, t: 0, c: Math.random() < 0.5 ? "#ffd166" : "#ff7a45", r: 2 + Math.random() * 3 });
       dist += dt * speed * 0.12; speed = 34 + dist * 0.35;
-      spawnT -= dt;
-      if (spawnT <= 0) { spawn(); spawnT = Math.max(0.85, 1.7 - dist * 0.004); }
-      const vx = speed * U * 0.28;
+      // paws come at a fixed spacing (about three paws wide, closing in slowly) and the flight speeds up with distance
+      const last = obs[obs.length - 1];
+      if (!last || last.x < W + 40 - U * Math.max(30, 40 - dist * 0.05)) spawn();
+      const vx = U * Math.min(38, 24 + dist * 0.08);
       for (const o of obs) o.x -= vx * dt;
       for (const c of coins) c.x -= vx * dt;
       obs = obs.filter((o) => o.x > -o.w - 20); coins = coins.filter((c) => c.x > -30 && !c.got);
       const rx = W * 0.28, rr = U * 4;
-      if (rocket.y < rr || rocket.y > H - rr) return die();
+      // the sky is a soft ceiling (the rocket just stops there); only the ground crashes it
+      if (rocket.y < rr) { rocket.y = rr; rocket.vy = Math.max(rocket.vy, 0); }
+      if (rocket.y > H - rr) return die();
       for (const o of obs) {
         if (rx + rr > o.x && rx - rr < o.x + o.w && (rocket.y - rr < o.top || rocket.y + rr > o.bot)) return die();
         if (!o.passed && o.x + o.w < rx) { o.passed = true; beep(880, 0.05, "triangle", 0.04); }
@@ -157,9 +163,9 @@
     }
     if (state === "title") {
       txt("TO THE MOON", W / 2, H * 0.24, s * 0.12, "#fff6d6");
-      txt("Hold to boost. Let go to fall.", W / 2, H * 0.24 + s * 0.1, Math.max(15, s * 0.04), "#f4f1ff", "center", 600);
+      txt("Tap or hold to boost. Let go to fall.", W / 2, H * 0.24 + s * 0.1, Math.max(15, s * 0.04), "#f4f1ff", "center", 600);
       txt("Dodge the bear paws, grab green candles.", W / 2, H * 0.24 + s * 0.155, Math.max(13, s * 0.032), "#a8a6d6", "center", 600);
-      txt("Space / mouse / finger: hold", W / 2, H * 0.82, Math.max(13, s * 0.03), "#a8a6d6", "center", 700);
+      txt("Space / mouse / finger: tap or hold", W / 2, H * 0.82, Math.max(13, s * 0.03), "#a8a6d6", "center", 700);
       txt("Press Space or tap to launch", W / 2, H * 0.89, Math.max(16, s * 0.045), `rgba(255,209,102,${0.6 + Math.sin(t * 4) * 0.4})`);
     }
     if (state === "over") {
@@ -177,6 +183,8 @@
     if (state === "over" && performance.now() - overAt < 450) return;
     if (state !== "play") start();
     holding = true;
+    // every press kicks the rocket up, so a tap works like a flap; holding keeps the boost on
+    rocket.vy = Math.min(rocket.vy, -H * 0.45);
   };
   const release = () => { holding = false; };
   window.addEventListener("keydown", (e) => { if (e.code === "Space" || e.code === "ArrowUp" || e.code === "KeyW" || e.code === "Enter") { e.preventDefault(); if (!e.repeat) press(); } });

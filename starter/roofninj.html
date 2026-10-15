@@ -39,16 +39,18 @@
     const y = Math.max(H * 0.45, Math.min(H * 0.82, prev + (Math.random() - 0.5) * H * 0.18));
     const roof = { x, y, w };
     roofs.push(roof);
-    // stars to grab above the roof, sometimes a spike box
+    // stars to grab above the roof, sometimes a spike box (spike: its distance from the roof's left edge, so it scrolls with the roof)
     if (Math.random() < 0.8) for (let i = 0; i < 3; i++) stars.push({ x: x + w * (0.25 + i * 0.25), y: y - U * (10 + Math.sin(i) * 4), got: false });
-    if (w > U * 34 && Math.random() < 0.45) roof.spike = x + w * (0.45 + Math.random() * 0.3);
+    if (w > U * 34 && Math.random() < 0.45) roof.spike = w * (0.45 + Math.random() * 0.3);
     return roof;
   }
   function reset() {
     ninja = { x: W * 0.25, y: H * 0.6, vy: 0, ground: true, flip: 0 };
     roofs = []; stars = []; parts = []; scroll = 0; speed = U * 42; score = 0; jumps = 0;
-    roofs.push({ x: -U * 10, y: H * 0.68, w: W * 0.6 });
-    let x = W * 0.6 + U * 12; while (x < W * 2) { const r = makeRoof(x); x = r.x + r.w + gapW(); }
+    // the first roof gives about two seconds of run-up before the first gap, on a phone too
+    const first = Math.max(W * 0.6, W * 0.25 + U * 95);
+    roofs.push({ x: -U * 10, y: H * 0.68, w: first });
+    let x = first + U * 12; while (x < W * 2) { const r = makeRoof(x); x = r.x + r.w + gapW(); }
   }
   const gapW = () => U * (10 + Math.random() * 10) + Math.min(U * 14, scroll * 0.0012);
   function start() { wake(); reset(); state = "play"; beep(392, 0.12, "square", 0.04, 200); }
@@ -79,7 +81,7 @@
       const r = roofs.find((r) => ninja.x > r.x && ninja.x < r.x + r.w);
       if (r && ninja.vy >= 0 && ninja.y <= r.y + 2 && ny >= r.y) { ninja.y = r.y; ninja.vy = 0; if (!ninja.ground) { for (let i = 0; i < 6; i++) parts.push({ x: ninja.x, y: r.y, vx: (Math.random() - 0.5) * 160, vy: -Math.random() * 60, life: 0.3, t: 0, c: "#c9a6ff" }); } ninja.ground = true; jumps = 0; }
       else { ninja.y = ny; ninja.ground = false; }
-      if (r && r.spike && Math.abs(ninja.x - r.spike) < U * 3.5 && ninja.y > r.y - U * 5) return die("spike");
+      if (r && r.spike && Math.abs(ninja.x - (r.x + r.spike)) < U * 3.5 && ninja.y > r.y - U * 5) return die("spike");
       if (r && ninja.y > r.y + U * 4 && ninja.x > r.x + U * 2) { ninja.vy = Math.max(ninja.vy, 0); }
       if (ninja.y > H + U * 10) return die("fall");
       ninja.flip = Math.max(0, ninja.flip - dt * 2.5);
@@ -134,7 +136,7 @@
         cx.fillStyle = "#1a0f24"; cx.fillRect(r.x, r.y, r.w, H - r.y);
         cx.fillStyle = "#3a2050"; cx.fillRect(r.x, r.y, r.w, U * 1.4);
         cx.fillStyle = "#ffd16655"; for (let wx = r.x + U * 4; wx < r.x + r.w - U * 4; wx += U * 7) for (let wy = r.y + U * 6; wy < H; wy += U * 9) if (((wx + wy) | 0) % 3) cx.fillRect(wx, wy, U * 2.4, U * 3);
-        if (r.spike) { cx.fillStyle = "#c9c2d6"; for (let i = -1; i <= 1; i++) { cx.beginPath(); cx.moveTo(r.spike + i * U * 2 - U, r.y); cx.lineTo(r.spike + i * U * 2, r.y - U * 3.4); cx.lineTo(r.spike + i * U * 2 + U, r.y); cx.fill(); } }
+        if (r.spike) { const sx = r.x + r.spike; cx.fillStyle = "#c9c2d6"; for (let i = -1; i <= 1; i++) { cx.beginPath(); cx.moveTo(sx + i * U * 2 - U, r.y); cx.lineTo(sx + i * U * 2, r.y - U * 3.4); cx.lineTo(sx + i * U * 2 + U, r.y); cx.fill(); } }
       }
       for (const s of stars) {
         cx.save(); cx.translate(s.x, s.y); cx.rotate(t * 6); cx.fillStyle = "#ffd166";
@@ -181,7 +183,7 @@
   resize(); reset();
   if (COVER) {
     state = "play"; t = 0.05;
-    roofs = [{ x: -U * 10, y: H * 0.7, w: W * 0.42 + U * 10 }, { x: W * 0.58, y: H * 0.64, w: W * 0.6, spike: W * 0.9 }];
+    roofs = [{ x: -U * 10, y: H * 0.7, w: W * 0.42 + U * 10 }, { x: W * 0.58, y: H * 0.64, w: W * 0.6, spike: W * 0.32 }];
     stars = [0, 1, 2].map((i) => ({ x: W * (0.6 + i * 0.09), y: H * 0.5 - Math.sin(i + 0.5) * U * 3, got: false }));
     ninja = { x: W * 0.48, y: H * 0.5, vy: -1, ground: false, flip: 0.55 };
     for (let i = 0; i < 10; i++) parts.push({ x: W * 0.48 - U * (3 + i * 2.4), y: H * 0.5 + U * (1 + i * 1.3), vx: 0, vy: 0, life: 1, t: i * 0.08, c: "#ffc2e2" });
