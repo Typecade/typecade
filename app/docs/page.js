@@ -46,7 +46,7 @@ export default async function Docs() {
 
           <section id="likes"><h2>Likes</h2>
             <ul>
-              <li>Liking takes a signed-in wallet holding $TYPECADE worth <strong>{LIKE_MIN_SOL} SOL</strong>.</li>
+              <li>Liking is free. It takes a signed-in wallet holding $TYPECADE worth <strong>{LIKE_MIN_SOL} SOL</strong>; nothing is spent, the coin stays in the wallet.</li>
               <li>One like per wallet per game. Nobody can like their own game.</li>
               <li>$TYPECADE you bought counts at once. $TYPECADE that arrived by plain transfer counts after {TRANSFER_WAIT_H} hours, so one bag passed between wallets cannot like a game many times a day.</li>
             </ul>

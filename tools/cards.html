@@ -1,7 +1,7 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
 <!-- Image cards for the launch thread on X, 1600x900 (16:9). ?v=1 one sentence, one game  2 how it works  3 where the fees go
-     4 sealed and open source  5 the six starter games (written by the team, and the card says so)  6 from sentence to game: the engine's pipeline. Same ground as the site and the glass move icons (#0b0b0c). Shot with tools/shot.mjs. -->
+     4 sealed and open source  5 the six starter games (written by the team, and the card says so)  6 from sentence to game: the engine's pipeline  7 how makers get paid, from a trade to the payout  8 the play bot's results on the six starter games  9 the six starter games, big, to play now. Same ground as the site and the glass move icons (#0b0b0c). Shot with tools/shot.mjs. -->
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Onest:wght@400;600;700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
 <style>
   html, body { margin: 0; background: #0b0b0c; overflow: hidden; }
@@ -42,13 +42,29 @@
   .points b { display: block; font: 700 34px/1.1 "Onest"; margin-bottom: 8px; }
   .points p { margin: 0; font: 400 25px/1.4 "Onest"; color: #b9b9be; }
   /* 6 */
-  .pipe { position: absolute; left: 80px; right: 80px; top: 300px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px; }
+  .pipe { position: absolute; left: 80px; right: 80px; top: 270px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px; }
   .pipe div { position: relative; padding: 26px 24px; min-height: 290px; border-radius: 20px; border: 2px solid rgba(243,243,241,.22); background: #121214; }
   .pipe div:not(:last-child)::after { content: ""; position: absolute; right: -16px; top: 50%; width: 10px; height: 10px; border-top: 2px solid #b3a0ff; border-right: 2px solid #b3a0ff; transform: translateY(-50%) rotate(45deg); }
   .pipe i { display: block; font: 500 22px/1 "JetBrains Mono"; font-style: normal; color: #b3a0ff; margin-bottom: 22px; }
   .pipe b { display: block; font: 700 30px/1.1 "Onest"; margin-bottom: 14px; }
   .pipe p { margin: 0; font: 400 22px/1.4 "Onest"; color: #b9b9be; }
   .pipe .hl { border-color: #b3a0ff; }
+  .pnote { position: absolute; left: 80px; right: 80px; top: 640px; margin: 0; font: 400 22px/1.4 "Onest"; color: #8f8f96; }
+  /* 8 */
+  .runs { position: absolute; left: 80px; right: 80px; top: 230px; border-collapse: collapse; width: calc(100% - 160px); font: 400 24px/1.3 "Onest"; }
+  .runs th { text-align: left; padding: 0 0 14px; font: 500 18px/1 "JetBrains Mono"; color: #8f8f96; border-bottom: 2px solid rgba(243,243,241,.18); }
+  .runs td { padding: 15px 0; border-bottom: 2px solid rgba(243,243,241,.08); vertical-align: top; }
+  .runs td:first-child { font-weight: 600; width: 270px; }
+  .runs td.ok { width: 150px; font: 500 22px/1.3 "JetBrains Mono"; color: #f3f3f1; }
+  .runs td.fix { color: #b3a0ff; }
+  .runs td.found { color: #b9b9be; font-size: 22px; }
+  /* 9 */
+  .v9 h1 { top: 64px; font-size: 72px; }
+  .lbl9 { position: absolute; right: 80px; top: 92px; margin: 0; font: 400 22px/1.3 "Onest"; color: #8f8f96; text-align: right; }
+  .grid9 { position: absolute; left: 80px; right: 80px; top: 178px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+  .grid9 figure { position: relative; margin: 0; height: 270px; border-radius: 18px; overflow: hidden; border: 2px solid rgba(243,243,241,.16); }
+  .grid9 img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .grid9 figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 18px 14px; font: 700 28px/1 "Onest"; background: linear-gradient(transparent, rgba(8,8,10,.85)); }
   /* 5 */
   .v5 h1 { top: 64px; font-size: 64px; }
   .note { position: absolute; left: 80px; top: 140px; margin: 0; font: 400 23px/1.3 "Onest"; color: #8f8f96; }
@@ -91,6 +107,26 @@
           <div class="hl"><i>04</i><b>One free repair</b><p>If anything throws, the error goes back to the engine and it fixes the game.</p></div>
           <div><i>05</i><b>Sealed, public</b><p>Its own page with no network access. The code lands on GitHub.</p></div>
         </div>${foot}`,
+    7: `<h1>HOW MAKERS <span>GET PAID.</span></h1>
+        <div class="pipe">
+          <div><i>01</i><b>A trade</b><p>Every $TYPECADE trade pays a creator fee.</p></div>
+          <div><i>02</i><b>Split on-chain</b><p>pump.fun fee sharing: 15% prize pool, 35% AI tank, 50% developer.</p></div>
+          <div><i>03</i><b>Likes</b><p>Holders like games. One like per wallet per game, never their own.</p></div>
+          <div class="hl"><i>04</i><b>00:00 UTC</b><p>The day's 10 most-liked games share the pool by likes.</p></div>
+          <div class="hl"><i>05</i><b>One payout</b><p>A single on-chain transaction, linked on the leaderboard.</p></div>
+        </div>
+        <p class="pnote">Example: a pool of 1 SOL and three games with 30, 20 and 10 likes pay their makers 0.5, 0.333 and 0.167 SOL.</p>${foot}`,
+    8: `<h1>A BOT PLAYED <span>EVERY GAME.</span></h1>
+        <table class="runs"><thead><tr><th>GAME</th><th>LAPTOP</th><th>PHONE</th><th>WHAT IT FOUND</th></tr></thead><tbody>
+          <tr><td>Candle Snake</td><td class="ok">pass</td><td class="ok">pass</td><td class="found">Nothing</td></tr>
+          <tr><td>To The Moon</td><td class="ok fix">fixed</td><td class="ok fix">fixed</td><td class="found">A tap barely lifted the rocket. Paws came too close together.</td></tr>
+          <tr><td>Candle Breaker</td><td class="ok">pass</td><td class="ok">pass</td><td class="found">Nothing</td></tr>
+          <tr><td>Rainy Day Cat</td><td class="ok">pass</td><td class="ok">pass</td><td class="found">Nothing</td></tr>
+          <tr><td>Bug Blaster</td><td class="ok">pass</td><td class="ok">pass</td><td class="found">Nothing</td></tr>
+          <tr><td>Rooftop Ninja</td><td class="ok fix">fixed</td><td class="ok fix">fixed</td><td class="found">Spikes stood still while the roofs moved.</td></tr>
+        </tbody></table>${foot}`,
+    9: `<h1>PLAY THEM <span>NOW.</span></h1><p class="lbl9">Six starter games, made by the team.<br>Free, in your browser, on any phone.</p>
+        <div class="grid9">${[["candlsnk", "Candle Snake"], ["tothemun", "To The Moon"], ["candlebk", "Candle Breaker"], ["rainycat", "Rainy Day Cat"], ["bugblast", "Bug Blaster"], ["roofninj", "Rooftop Ninja"]].map(([g, t]) => `<figure><img src="/public/covers/${g}.jpg" alt=""><figcaption>${t}</figcaption></figure>`).join("")}</div>${foot}`,
     5: `<h1>SIX GAMES <span>ON DAY ONE.</span></h1><p class="note">Written by the team so the board isn’t empty. Every game after these is written by the AI.</p>
         <div class="six">${[
           ["candlsnk", "Candle Snake", "Snake, but you're a chart eating green candles and dodging the red ones"],

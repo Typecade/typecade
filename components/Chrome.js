@@ -42,7 +42,7 @@ export function WalletButton() {
         <div className="wallet-pop">
           <p className="mono">{short(me.wallet)}</p>
           <p>{h ? <>$TYPECADE worth <strong>{(h.sol ?? 0).toFixed(2)} SOL</strong></> : "Reading your $TYPECADE…"}</p>
-          <p className="dim">{h?.holder ? "You can make games and like them." : h?.liker ? `Liking unlocked. Making games takes ${me.holderMinSol} SOL.` : `Making games takes ${me.holderMinSol} SOL, liking ${me.likeMinSol} SOL.`}</p>
+          <p className="dim">{h?.holder ? "You can make games and like them." : h?.liker ? `Liking unlocked. Making games needs $TYPECADE worth ${me.holderMinSol} SOL in this wallet.` : `Hold $TYPECADE worth ${me.holderMinSol} SOL to make games, ${me.likeMinSol} SOL to like them. Nothing is spent.`}</p>
           <button type="button" className="btn-line" onClick={() => { setOpen(false); signOut(); }}>DISCONNECT</button>
         </div>
       )}
