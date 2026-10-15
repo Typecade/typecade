@@ -30,7 +30,8 @@
   .endbox { display: grid; justify-items: center; gap: 30px; }
   .endbox img { width: 260px; height: 260px; border-radius: 36px; }
   .endbox b { font: 700 120px/0.9 "Pixelify Sans"; text-align: center; }
-  .endbox span { font: 600 44px/1 "Onest", sans-serif; color: #c9bcff; }
+  .endbox span { font: 600 44px/1 "Onest", sans-serif; color: #b3a0ff; }
+  .endbox b i { font-style: normal; color: #b3a0ff; }
   .bar2 { position: absolute; left: 330px; right: 330px; bottom: 70px; height: 5px; border-radius: 5px; background: rgba(243,243,241,.13); overflow: hidden; }
   .bar2 i { display: block; height: 100%; background: #f3f3f1; }
 </style></head>
@@ -88,9 +89,9 @@ function build(i) {
   if (i === 1) a.innerHTML = `<pre class="code" id="code"></pre>`;
   if (i === 2) a.innerHTML = `<div class="game" id="game"><img src="/public/covers/rainycat.jpg" alt=""><span class="play" id="play"><i></i>PLAY</span></div>`;
   if (i === 3) a.innerHTML = `<div class="game" id="game"><img src="/public/covers/rainycat.jpg" alt="">${Array.from({ length: 9 }, (_, k) => HEART.replace('class="heart"', `class="heart" id="h${k}"`)).join("")}<span class="count">${HEART.replace('class="heart"', 'class="heart" style="position:static;width:30px;height:28px"')}<span id="likes">0</span></span></div>`;
-  if (i === 4) a.innerHTML = `<div class="bars">${[["Rainy Day Cat", 50], ["Candle Snake", 33], ["Bug Blaster", 17]].map(([n, p], k) => `<div class="bar"><i class="fill" id="f${k}" data-p="${p}"></i><span>${n}</span><b>${p}%</b></div>`).join("")}</div><p class="note">example: the day's pool, shared by likes</p>`;
+  if (i === 4) a.innerHTML = `<div class="bars">${[["Burger Escape", 50], ["Penguin Slide", 33], ["Tax Invaders", 17]].map(([n, p], k) => `<div class="bar"><i class="fill" id="f${k}" data-p="${p}"></i><span>${n}</span><b>${p}%</b></div>`).join("")}</div><p class="note">example: the day's pool, shared by likes</p>`;
   if (i === 5) a.innerHTML = `<img class="coin" id="coin" src="/public/icon-512.png" alt=""><p class="coinp" id="coinp">Its creator fees pay the AI that writes the games and fill the makers' prize pool.</p>`;
-  if (i === 6) { $("h").textContent = ""; a.innerHTML = ""; a.style.top = "0"; a.style.height = "1080px"; a.innerHTML = `<div class="end" id="end"><div class="endbox"><img src="/public/icon-512.png" alt=""><b>TYPE A<br>GAME.</b><span>typecade.app</span></div></div>`; }
+  if (i === 6) { $("h").textContent = ""; a.innerHTML = ""; a.style.top = "0"; a.style.height = "1080px"; a.innerHTML = `<div class="end" id="end"><div class="endbox"><img src="/public/icon-512.png" alt=""><b>TYPE A<br><i>GAME.</i></b><span>typecade.app</span></div></div>`; }
   else { a.style.top = "380px"; a.style.height = "560px"; }
 }
 function render(t) {

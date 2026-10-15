@@ -111,7 +111,7 @@ export default function Intro() {
     <div className={`intro intro-${stage}`} role="dialog" aria-label="Typecade intro" onClick={stage === "gate" ? play : undefined}>
       {stage === "gate" && (
         <div className="gate-inner">
-          <div className="gate-key"><img src="/icon-256.png" width="150" height="150" alt="" /></div>
+          <div className="gate-key"><img src="/logo-controller-480.png" width="220" height="145" alt="" /></div>
           <p className="gate-name">TYPECADE</p>
           <div className="gate-bar" aria-hidden="true"><span style={{ width: `${pct}%` }} /></div>
           <p className="gate-pct">{pct}%</p>
@@ -136,7 +136,7 @@ export default function Intro() {
             )}
             {scene === 4 && (
               <div className="f-pool">
-                {[["Rainy Day Cat", 50], ["Candle Snake", 33], ["Bug Blaster", 17]].map(([n, p], i) => (
+                {[["Burger Escape", 50], ["Penguin Slide", 33], ["Tax Invaders", 17]].map(([n, p], i) => (
                   <div key={n} className="f-bar" style={{ "--p": `${p}%`, "--d": `${i * 160}ms` }}><span>{n}</span><b>{p}%</b></div>
                 ))}
                 <p className="f-note mono">example: the day's pool shared by likes</p>
