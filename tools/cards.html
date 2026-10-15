@@ -1,7 +1,7 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
 <!-- Image cards for the launch thread on X, 1600x900 (16:9). ?v=1 one sentence, one game  2 how it works  3 where the fees go
-     4 sealed and open source  5 the six starter games (written by the team, and the card says so). Same ground as the site and the glass move icons (#0b0b0c). Shot with tools/shot.mjs. -->
+     4 sealed and open source  5 the six starter games (written by the team, and the card says so)  6 from sentence to game: the engine's pipeline. Same ground as the site and the glass move icons (#0b0b0c). Shot with tools/shot.mjs. -->
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Onest:wght@400;600;700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
 <style>
   html, body { margin: 0; background: #0b0b0c; overflow: hidden; }
@@ -41,6 +41,14 @@
   .points { position: absolute; left: 80px; top: 300px; width: 640px; display: grid; gap: 30px; }
   .points b { display: block; font: 700 34px/1.1 "Onest"; margin-bottom: 8px; }
   .points p { margin: 0; font: 400 25px/1.4 "Onest"; color: #b9b9be; }
+  /* 6 */
+  .pipe { position: absolute; left: 80px; right: 80px; top: 300px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 22px; }
+  .pipe div { position: relative; padding: 26px 24px; min-height: 290px; border-radius: 20px; border: 2px solid rgba(243,243,241,.22); background: #121214; }
+  .pipe div:not(:last-child)::after { content: ""; position: absolute; right: -16px; top: 50%; width: 10px; height: 10px; border-top: 2px solid #b3a0ff; border-right: 2px solid #b3a0ff; transform: translateY(-50%) rotate(45deg); }
+  .pipe i { display: block; font: 500 22px/1 "JetBrains Mono"; font-style: normal; color: #b3a0ff; margin-bottom: 22px; }
+  .pipe b { display: block; font: 700 30px/1.1 "Onest"; margin-bottom: 14px; }
+  .pipe p { margin: 0; font: 400 22px/1.4 "Onest"; color: #b9b9be; }
+  .pipe .hl { border-color: #b3a0ff; }
   /* 5 */
   .v5 h1 { top: 64px; font-size: 64px; }
   .note { position: absolute; left: 80px; top: 140px; margin: 0; font: 400 23px/1.3 "Onest"; color: #8f8f96; }
@@ -75,6 +83,14 @@
     4: `<h1>SEALED.<br><span>OPEN SOURCE.</span></h1>
         <div class="points"><div><b>Every game runs sealed</b><p>No network access, so a game can't phone home or turn into a drainer.</p></div><div><b>Every game is public</b><p>Its code and the sentence it came from land on GitHub the moment it's made.</p></div></div>
         <div class="wall">${["candlsnk","tothemun","candlebk","rainycat","bugblast","roofninj"].map((g) => `<img src="/public/thumbs/${g}.jpg" alt="">`).join("")}</div>${foot}`,
+    6: `<h1>FROM SENTENCE <span>TO GAME.</span></h1>
+        <div class="pipe">
+          <div><i>01</i><b>Your sentence</b><p>“a frog crossing a highway made of crypto charts”</p></div>
+          <div><i>02</i><b>Code, live</b><p>The AI writes the whole game as one HTML file while you watch. About 40 s.</p></div>
+          <div class="hl"><i>03</i><b>Test run</b><p>It plays itself for 4 s in your browser: Space, arrows, clicks, taps.</p></div>
+          <div class="hl"><i>04</i><b>One free repair</b><p>If anything throws, the error goes back to the engine and it fixes the game.</p></div>
+          <div><i>05</i><b>Sealed, public</b><p>Its own page with no network access. The code lands on GitHub.</p></div>
+        </div>${foot}`,
     5: `<h1>SIX GAMES <span>ON DAY ONE.</span></h1><p class="note">Written by the team so the board isn’t empty. Every game after these is written by the AI.</p>
         <div class="six">${[
           ["candlsnk", "Candle Snake", "Snake, but you're a chart eating green candles and dodging the red ones"],
