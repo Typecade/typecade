@@ -114,7 +114,7 @@ export default function Intro() {
     <div className={`intro intro-${stage}`} role="dialog" aria-label="Typecade intro" onClick={stage === "gate" ? play : undefined}>
       {stage === "gate" && (
         <div className="gate-inner">
-          <div className="gate-key"><img src="/logo-controller-480.png" width="220" height="145" alt="" /></div>
+          <div className="gate-key"><img src="/logo-controller-480.png" width="230" height="190" alt="" style={{ imageRendering: "pixelated" }} /></div>
           <p className="gate-name">TYPECADE</p>
           <div className="gate-bar" aria-hidden="true"><span style={{ width: `${pct}%` }} /></div>
           <p className="gate-pct">{pct}%</p>

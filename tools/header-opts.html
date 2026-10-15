@@ -2,13 +2,15 @@
 <html><head><meta charset="utf-8">
 <!-- Four X header options, all kept inside X's safe centre column (the phone app crops ~8% off each side, puts its buttons
      over the mid-height corners and the profile picture over the bottom left). ?v=1..4&w=1500|3000.
-     1 night, centred mark and line   2 night, pixel headline and a big controller   3 a wall of real games   4 lavender (the logo ground, #b3a0ff, same as the site's accent) -->
+     1 night, centred mark and line   2 night, pixel headline and a big controller   3 a wall of real games   4 lavender
+     5 black with the pixel controller (the coin's mark since 15 Oct) (the logo ground, #b3a0ff, same as the site's accent) -->
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Onest:wght@300;600;700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
 <style>
   html, body { margin: 0; overflow: hidden; background: #000; }
   .c { position: relative; width: 1500px; height: 500px; transform-origin: 0 0; overflow: hidden; }
   .night { background: #1c1634; }
   .lav { background: #b3a0ff; }
+  .pixel { background: #08080a; }
   .abs { position: absolute; }
   .center { left: 0; right: 0; text-align: center; }
   /* 1 */
@@ -50,10 +52,13 @@
     3: `<div class="wall">${Array.from({ length: 24 }, (_, i) => `<img src="/public/covers/${games[i % 6]}.jpg" alt="">`).join("")}</div><div class="shade"></div>
         <div class="abs m3"><img src="/brand/opts/icon-3-night-top.png" alt=""><b>Typecade</b></div>
         <h1 class="abs center h3">TYPE A GAME.</h1><p class="abs center s3">Play it in a minute. Makers get paid.</p>`,
+    5: `<img class="abs" src="/brand/pixel/sprite.png" style="left:50%;top:40px;width:276px;height:228px;transform:translateX(-50%);image-rendering:pixelated" alt="">
+        <p class="abs center" style="top:292px;margin:0;font:700 64px/1 'Pixelify Sans';color:#f3f3f1;letter-spacing:0.04em">TYPECADE</p>
+        <p class="abs center" style="top:372px;margin:0;font:600 28px/1.2 'Onest',sans-serif;color:#b3a0ff">Type a game. Get paid when people play it.</p>`,
     4: `<img class="abs m4" src="/brand/opts/game-color/typecade-icon-a-1000.png" alt="">
         <p class="abs center w4">Typecade</p><p class="abs center s4">Type a game. Play it in a minute.</p>`,
   }[v];
-  c.className = "c " + (v === "4" ? "lav" : "night");
+  c.className = "c " + (v === "4" ? "lav" : v === "5" ? "pixel" : "night");
   c.innerHTML = html;
   c.style.transform = `scale(${w / 1500})`;
   Promise.all([document.fonts.ready, ...[...c.querySelectorAll("img")].map((i) => i.complete ? 1 : new Promise((r) => (i.onload = i.onerror = r)))]).then(() => { window.READY = true; });

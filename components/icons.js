@@ -15,10 +15,9 @@ export const Wallet = (p) => <svg {...S(p)}><rect x="3" y="6" width="18" height=
 export const Trophy = (p) => <svg {...S(p)}><path d="M8 4h8v5a4 4 0 0 1-8 0V4ZM8 6H5a2.5 2.5 0 0 0 3 3.5M16 6h3a2.5 2.5 0 0 1-3 3.5M12 13v4M8.5 20h7" /></svg>;
 export const XMark = (p) => <svg width={p?.size ?? 22} height={p?.size ?? 22} viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.75 3h3.07l-6.7 7.66L22 21h-6.17l-4.83-6.32L5.47 21H2.4l7.17-8.2L2 3h6.33l4.37 5.77L17.75 3Zm-1.08 16.17h1.7L7.4 4.74H5.58l11.09 14.43Z" /></svg>;
 export const GitHub = (p) => <svg width={p?.size ?? 22} height={p?.size ?? 22} viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.56 9.56 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" /></svg>;
-// the mark on the site: a pixel controller in the logo's lavender, on the same pixel grid as the Pixelify wordmark (2 px a
-// cell); the buttons are holes that show the ground. The glass controller on its lavender tile is the app icon (favicon, X, pump.fun).
-const PAD = "M4 0h12v1h-12zM2 1h16v1h-16zM1 2h3v1h-3zM5 2h10v1h-10zM16 2h3v1h-3zM0 3h3v1h-3zM6 3h8v1h-8zM15 3h1v1h-1zM17 3h3v1h-3zM0 4h4v1h-4zM5 4h3v1h-3zM9 4h2v1h-2zM12 4h3v1h-3zM16 4h4v1h-4zM0 5h20v1h-20zM0 6h20v1h-20zM0 7h7v1h-7zM13 7h7v1h-7zM0 8h6v1h-6zM14 8h6v1h-6zM1 9h4v1h-4zM15 9h4v1h-4zM2 10h2v1h-2zM16 10h2v1h-2z";
+// the mark on the site: the pixel controller of the coin (tools/pixel-controller.mjs), drawn at one CSS pixel per sprite
+// pixel and kept hard-edged; the lavender buttons are the brand colour
 export const Logo = ({ size = 36 }) => {
-  const p = Math.max(2, Math.round(size / 18));
-  return <svg width={20 * p} height={11 * p} viewBox="0 0 20 11" shapeRendering="crispEdges" aria-hidden="true"><path fill="var(--lav)" d={PAD} /></svg>;
+  const k = size >= 72 ? 2 : 1;
+  return <img src="/logo-sprite.png" width={46 * k} height={38 * k} alt="" style={{ imageRendering: "pixelated" }} />;
 };

@@ -1,5 +1,6 @@
 import { JetBrains_Mono, Onest, Pixelify_Sans } from "next/font/google";
 import "./globals.css";
+import Disclosure from "../components/Disclosure.js";
 
 const px = Pixelify_Sans({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--f-pixel", display: "swap" });
 const ui = Onest({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--f-body", display: "swap" });
@@ -18,7 +19,7 @@ export const viewport = { width: "device-width", initialScale: 1, themeColor: "#
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${px.variable} ${ui.variable} ${mono.variable}`}>
-      <body>{children}</body>
+      <body>{children}<Disclosure /></body>
     </html>
   );
 }
