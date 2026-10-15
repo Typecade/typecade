@@ -1,7 +1,7 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
 <!-- Image cards for the launch thread on X, 1600x900 (16:9). ?v=1 one sentence, one game  2 how it works  3 where the fees go
-     4 sealed and open source  5 the six starter games (written by the team, and the card says so)  6 from sentence to game: the engine's pipeline  7 how makers get paid, from a trade to the payout  8 the play bot's results on the six starter games  9 the six starter games, big, to play now. Same ground as the site and the glass move icons (#0b0b0c). Shot with tools/shot.mjs. -->
+     4 sealed and open source  5 the six starter games (written by the team, and the card says so)  6 from sentence to game: the engine's pipeline  7 how makers get paid, from a trade to the payout  8 the play bot's results on the six starter games  9 the six starter games, big, to play now  10 every game is open source: how the games repo is laid out. Same ground as the site and the glass move icons (#0b0b0c). Shot with tools/shot.mjs. -->
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@700&family=Onest:wght@400;600;700&family=JetBrains+Mono:wght@500&display=block" rel="stylesheet">
 <style>
   html, body { margin: 0; background: #0b0b0c; overflow: hidden; }
@@ -65,6 +65,13 @@
   .grid9 figure { position: relative; margin: 0; height: 270px; border-radius: 18px; overflow: hidden; border: 2px solid rgba(243,243,241,.16); }
   .grid9 img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .grid9 figcaption { position: absolute; left: 0; right: 0; bottom: 0; padding: 40px 18px 14px; font: 700 28px/1 "Onest"; background: linear-gradient(transparent, rgba(8,8,10,.85)); }
+  /* 10 */
+  .tree { position: absolute; left: 80px; top: 270px; width: 640px; margin: 0; padding: 34px 38px; border-radius: 20px; border: 2px solid rgba(243,243,241,.22); background: #121214; font: 500 26px/1.75 "JetBrains Mono"; color: #f3f3f1; white-space: pre; }
+  .tree em { font-style: normal; color: #8f8f96; }
+  .tree b { font-weight: 500; color: #b3a0ff; }
+  .facts { position: absolute; left: 900px; right: 80px; top: 280px; display: grid; gap: 34px; }
+  .facts b { display: block; font: 700 30px/1.15 "Onest"; margin-bottom: 8px; }
+  .facts p { margin: 0; font: 400 23px/1.4 "Onest"; color: #b9b9be; }
   /* 5 */
   .v5 h1 { top: 64px; font-size: 64px; }
   .note { position: absolute; left: 80px; top: 140px; margin: 0; font: 400 23px/1.3 "Onest"; color: #8f8f96; }
@@ -127,6 +134,13 @@
         </tbody></table>${foot}`,
     9: `<h1>PLAY THEM <span>NOW.</span></h1><p class="lbl9">Six starter games, made by the team.<br>Free, in your browser, on any phone.</p>
         <div class="grid9">${[["candlsnk", "Candle Snake"], ["tothemun", "To The Moon"], ["candlebk", "Candle Breaker"], ["rainycat", "Rainy Day Cat"], ["bugblast", "Bug Blaster"], ["roofninj", "Rooftop Ninja"]].map(([g, t]) => `<figure><img src="/public/covers/${g}.jpg" alt=""><figcaption>${t}</figcaption></figure>`).join("")}</div>${foot}`,
+    10: `<h1>EVERY GAME IS <span>OPEN SOURCE.</span></h1>
+        <pre class="tree">github.com/Typecade/games
+└ games/
+  └ <b>&lt;game id&gt;</b>/
+    ├ index.html  <em>the whole game</em>
+    └ README.md   <em>its sentence</em></pre>
+        <div class="facts"><div><b>The moment it's made</b><p>Every game is committed with the sentence it came from.</p></div><div><b>MIT licensed</b><p>Read it, play it, fork it, build on it.</p></div><div><b>The site is public too</b><p>github.com/Typecade/typecade</p></div></div>${foot}`,
     5: `<h1>SIX GAMES <span>ON DAY ONE.</span></h1><p class="note">Written by the team so the board isn’t empty. Every game after these is written by the AI.</p>
         <div class="six">${[
           ["candlsnk", "Candle Snake", "Snake, but you're a chart eating green candles and dodging the red ones"],

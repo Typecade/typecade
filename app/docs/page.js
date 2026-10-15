@@ -79,7 +79,7 @@ export default async function Docs() {
           </section>
 
           <section id="open"><h2>Open source</h2>
-            <p>Every game's code and the sentence it came from are committed to <a href={links.games} target="_blank" rel="noopener">{GAMES_REPO}</a> the moment it is made. The code of this site, the engine's rules and the payout worker are in <a href={links.source} target="_blank" rel="noopener">{SOURCE_REPO}</a>. Both are MIT licensed.</p>
+            <p>Every game's code and the sentence it came from are committed to <a href={links.games} target="_blank" rel="noopener">{GAMES_REPO}</a> the moment it is made. The code of this site and the engine's rules are in <a href={links.source} target="_blank" rel="noopener">{SOURCE_REPO}</a>. Both are MIT licensed. The payout worker runs on Typecade's server and is not public, because it holds the prize pool's key; every payout it makes is a public on-chain transaction, linked on the leaderboard.</p>
           </section>
 
           <section id="faq"><h2>FAQ</h2>
